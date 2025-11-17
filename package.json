@@ -1,6 +1,6 @@
 {
   "private": true,
-  "author": "Jorman Espinoza <espinoza.dev@gmail.com>",
+  "author": "Jorman Espinoza <j.espinoza.torrealba@accenture.com>",
   "scripts": {
     "build": "max build",
     "dev": "max dev",

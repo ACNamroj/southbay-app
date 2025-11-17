@@ -5,7 +5,7 @@ import { login } from '@/services/login/loginService';
 import type { LoginRequest } from '@/types/auth';
 import { mapApiTokensToStored } from '@/utils/authTokens';
 import { LoginFormPage, ProFormText } from '@ant-design/pro-components';
-import { history, Link } from '@umijs/max';
+import { history, Link, useModel } from '@umijs/max';
 import { message, theme } from 'antd';
 import useBreakpoint from 'antd/lib/grid/hooks/useBreakpoint';
 import React, { useCallback, useEffect, useMemo } from 'react';
@@ -16,6 +16,7 @@ const Login: React.FC = () => {
   const isMobile = !screens.md;
   const { collapsed, setCollapsed } = useSiderCollapse();
   const { setAuthTokens, isAuthTokenValid } = useAuthToken();
+  const { fetchCurrentUser } = useModel('user');
 
   const inputStyle = useMemo<React.CSSProperties>(
     () => ({
@@ -57,6 +58,7 @@ const Login: React.FC = () => {
         const response = await login(values);
         if (response?.success && response?.data) {
           setAuthTokens(mapApiTokensToStored(response.data));
+          await fetchCurrentUser();
           history.push('/');
           return true;
         }
@@ -67,7 +69,7 @@ const Login: React.FC = () => {
         return false;
       }
     },
-    [setAuthTokens],
+    [setAuthTokens, fetchCurrentUser],
   );
 
   return (

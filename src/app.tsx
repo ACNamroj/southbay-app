@@ -19,14 +19,18 @@ import {
   persistSidebarCollapsed,
   readSidebarCollapsed,
 } from '@/utils/sidebarStorage';
+import { UserOutlined } from '@ant-design/icons';
 import type { MenuDataItem } from '@ant-design/pro-layout/lib/typing';
-import type {
-  AxiosError,
-  AxiosRequestConfig,
-  RequestConfig,
-  RunTimeLayoutConfig,
+import {
+  getRequestInstance,
+  history,
+  useModel,
+  type AxiosError,
+  type AxiosRequestConfig,
+  type RequestConfig,
+  type RunTimeLayoutConfig,
 } from '@umijs/max';
-import { getRequestInstance, history } from '@umijs/max';
+import { Avatar, type AvatarProps } from 'antd';
 import useBreakpoint from 'antd/lib/grid/hooks/useBreakpoint';
 import React from 'react';
 
@@ -108,6 +112,48 @@ const Logo: React.FC<LogoProps> = ({ collapsed: collapsedProp }) => {
           Descuento de Empleados
         </div>
       )}
+    </div>
+  );
+};
+
+const UserMenuFooter: React.FC = () => {
+  const { currentUser } = useModel('user');
+  if (!currentUser) {
+    return null;
+  }
+  const profile = currentUser.profile;
+  const displayName =
+    [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') ||
+    currentUser.email;
+  const avatarProps: AvatarProps = {};
+  if (profile?.thumbnail || profile?.photo) {
+    avatarProps.src = profile.thumbnail || profile.photo || undefined;
+  } else {
+    avatarProps.icon = <UserOutlined />;
+    avatarProps.size = 'small';
+  }
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        padding: '12px 16px',
+        borderTop: '1px solid rgba(0, 0, 0, 0.06)',
+      }}
+    >
+      <Avatar {...avatarProps} />
+      <span
+        style={{
+          fontWeight: 500,
+          fontSize: 13,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}
+      >
+        {displayName}
+      </span>
     </div>
   );
 };
@@ -257,6 +303,7 @@ export const layout: RunTimeLayoutConfig<InitialState> = ({
     persistSidebarCollapsed(collapsed);
   },
   menuDataRender: disableMenuTooltip,
+  menuFooterRender: () => <UserMenuFooter />,
 });
 
 export const request: RequestConfig = {

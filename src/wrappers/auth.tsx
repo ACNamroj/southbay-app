@@ -1,31 +1,35 @@
 import { useAuthToken } from '@/hooks/auth/useAuthToken';
-import { history, Outlet } from '@umijs/max';
+import { history, Outlet, useModel } from '@umijs/max';
 import React, { useEffect, useState } from 'react';
 
 const AuthWrapper: React.FC = () => {
   const { isAuthTokenValid, refreshAuthTokens, removeAuthTokens } =
     useAuthToken();
+  const { currentUser, fetchCurrentUser, clearCurrentUser } = useModel('user');
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     const ensureAuth = async () => {
-      if (isAuthTokenValid()) {
+      let hasValidToken = isAuthTokenValid();
+      if (!hasValidToken) {
+        const refreshed = await refreshAuthTokens();
+        hasValidToken = Boolean(refreshed?.token);
+      }
+      if (!hasValidToken) {
+        removeAuthTokens();
+        clearCurrentUser();
         if (!cancelled) {
-          setIsReady(true);
+          history.replace('/login');
         }
         return;
       }
-      const refreshed = await refreshAuthTokens();
-      if (cancelled) {
-        return;
+      if (!currentUser) {
+        await fetchCurrentUser();
       }
-      if (refreshed?.token) {
+      if (!cancelled) {
         setIsReady(true);
-        return;
       }
-      removeAuthTokens();
-      history.replace('/login');
     };
 
     ensureAuth();
@@ -33,7 +37,14 @@ const AuthWrapper: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [isAuthTokenValid, refreshAuthTokens, removeAuthTokens]);
+  }, [
+    isAuthTokenValid,
+    refreshAuthTokens,
+    removeAuthTokens,
+    fetchCurrentUser,
+    clearCurrentUser,
+    currentUser,
+  ]);
 
   if (!isReady) {
     return null;
