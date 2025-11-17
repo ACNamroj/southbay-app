@@ -1,3 +1,4 @@
+import type { ApiResponse } from '@/types/api';
 import type { LoginRequest, LoginTokensResponse } from '@/types/auth';
 import { request } from '@umijs/max';
 
@@ -10,14 +11,8 @@ const withBaseUrl = (path: string) => {
   return `${API_BASE_URL.replace(/\/$/, '')}${path}`;
 };
 
-export type LoginApiResponse = {
-  success: boolean;
-  message?: string | null;
-  data?: LoginTokensResponse;
-};
-
 export const login = (body: LoginRequest) =>
-  request<LoginApiResponse>(withBaseUrl('/auth/login'), {
+  request<ApiResponse<LoginTokensResponse>>(withBaseUrl('/auth/login'), {
     method: 'POST',
     data: body,
   });
