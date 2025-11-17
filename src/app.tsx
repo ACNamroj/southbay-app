@@ -3,7 +3,9 @@
 // Global initial data configuration, used for initializing user info and permissions in the Layout
 // For more information, see the documentation: https://umijs.org/docs/api/runtime-config#getinitialstate
 import { LOGO_COMPACT, LOGO_ICON } from '@/assets';
+import { useAuthToken } from '@/hooks/auth/useAuthToken';
 import { useSiderCollapse } from '@/hooks/useSiderCollapse';
+import { logout } from '@/services/auth/logoutService';
 import { refreshAuthToken } from '@/services/auth/tokenService';
 import type { StoredAuthTokens } from '@/types/auth';
 import {
@@ -19,7 +21,7 @@ import {
   persistSidebarCollapsed,
   readSidebarCollapsed,
 } from '@/utils/sidebarStorage';
-import { UserOutlined } from '@ant-design/icons';
+import { LogoutOutlined, UserOutlined } from '@ant-design/icons';
 import type { MenuDataItem } from '@ant-design/pro-layout/lib/typing';
 import {
   getRequestInstance,
@@ -30,9 +32,9 @@ import {
   type RequestConfig,
   type RunTimeLayoutConfig,
 } from '@umijs/max';
-import { Avatar, type AvatarProps } from 'antd';
+import { Avatar, Button, Modal, type AvatarProps } from 'antd';
 import useBreakpoint from 'antd/lib/grid/hooks/useBreakpoint';
-import React from 'react';
+import React, { useCallback } from 'react';
 
 export type CollapseType = 'clickTrigger' | 'responsive';
 
@@ -58,7 +60,7 @@ export type InitialState = {
 
 export async function getInitialState(): Promise<InitialState> {
   const storedCollapsed = readSidebarCollapsed();
-  return { name: 'Jorman', collapsed: storedCollapsed ?? false };
+  return { name: '', collapsed: storedCollapsed ?? false };
 }
 
 type LogoProps = {
@@ -117,14 +119,16 @@ const Logo: React.FC<LogoProps> = ({ collapsed: collapsedProp }) => {
 };
 
 const UserMenuFooter: React.FC = () => {
-  const { currentUser } = useModel('user');
-  if (!currentUser) {
-    return null;
-  }
-  const profile = currentUser.profile;
+  const { currentUser, clearCurrentUser } = useModel('user');
+  const { removeAuthTokens } = useAuthToken();
+
+  const profile = currentUser?.profile;
   const displayName =
-    [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') ||
-    currentUser.email;
+    (currentUser &&
+      ([profile?.first_name, profile?.last_name].filter(Boolean).join(' ') ||
+        currentUser.email)) ||
+    undefined;
+
   const avatarProps: AvatarProps = {};
   if (profile?.thumbnail || profile?.photo) {
     avatarProps.src = profile.thumbnail || profile.photo || undefined;
@@ -132,28 +136,70 @@ const UserMenuFooter: React.FC = () => {
     avatarProps.icon = <UserOutlined />;
     avatarProps.size = 'small';
   }
+
+  const handleConfirmLogout = useCallback(async () => {
+    try {
+      await logout();
+    } catch (error) {
+      // Ignore errors: user will be logged out locally anyway
+    }
+    removeAuthTokens();
+    clearCurrentUser();
+    history.replace('/login');
+  }, [removeAuthTokens, clearCurrentUser]);
+
+  const handleLogoutClick = useCallback(() => {
+    Modal.confirm({
+      title: 'Cerrar sesión',
+      content: '¿Seguro que deseas cerrar sesión?',
+      okText: 'Cerrar sesión',
+      cancelText: 'Cancelar',
+      centered: true,
+      onOk: handleConfirmLogout,
+    });
+  }, [handleConfirmLogout]);
+
   return (
     <div
       style={{
         display: 'flex',
-        alignItems: 'center',
-        gap: 8,
+        flexDirection: 'column',
+        gap: 12,
         padding: '12px 16px',
         borderTop: '1px solid rgba(0, 0, 0, 0.06)',
       }}
     >
-      <Avatar {...avatarProps} />
-      <span
-        style={{
-          fontWeight: 500,
-          fontSize: 13,
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-        }}
+      {currentUser && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+          }}
+        >
+          <Avatar {...avatarProps} />
+          <span
+            style={{
+              fontWeight: 500,
+              fontSize: 13,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {displayName}
+          </span>
+        </div>
+      )}
+      <Button
+        type="text"
+        block
+        icon={<LogoutOutlined />}
+        style={{ justifyContent: 'flex-start', paddingLeft: 0 }}
+        onClick={handleLogoutClick}
       >
-        {displayName}
-      </span>
+        Cerrar sesión
+      </Button>
     </div>
   );
 };

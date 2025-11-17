@@ -65,7 +65,8 @@ const Login: React.FC = () => {
         message.error(response?.message || 'Credenciales inválidas');
         return false;
       } catch (error) {
-        message.error('No pudimos iniciar sesión. Inténtalo de nuevo.');
+        console.error('Login error:', error);
+        message.error('Credenciales inválidas');
         return false;
       }
     },
