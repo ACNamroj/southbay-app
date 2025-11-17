@@ -4,6 +4,10 @@
 // For more information, see the documentation: https://umijs.org/docs/api/runtime-config#getinitialstate
 import { LOGO_COMPACT, LOGO_ICON } from '@/assets';
 import { useSiderCollapse } from '@/hooks/useSiderCollapse';
+import {
+  persistSidebarCollapsed,
+  readSidebarCollapsed,
+} from '@/utils/sidebarStorage';
 import type { RunTimeLayoutConfig } from '@umijs/max';
 import useBreakpoint from 'antd/lib/grid/hooks/useBreakpoint';
 import React from 'react';
@@ -17,7 +21,8 @@ export type InitialState = {
 };
 
 export async function getInitialState(): Promise<InitialState> {
-  return { name: 'Jorman', collapsed: false };
+  const storedCollapsed = readSidebarCollapsed();
+  return { name: 'Jorman', collapsed: storedCollapsed ?? false };
 }
 
 type LogoProps = {
@@ -92,5 +97,6 @@ export const layout: RunTimeLayoutConfig<InitialState> = ({
       collapsed,
       collapseType: type,
     }));
+    persistSidebarCollapsed(collapsed);
   },
 });

@@ -1,4 +1,5 @@
 import type { CollapseType, InitialState } from '@/app';
+import { persistSidebarCollapsed } from '@/utils/sidebarStorage';
 import { useModel } from '@umijs/max';
 import { useCallback } from 'react';
 
@@ -21,6 +22,7 @@ export const useSiderCollapse = (): CollapseHookResult => {
         collapsed: next,
         collapseType: type,
       }));
+      persistSidebarCollapsed(next);
     },
     [setInitialState],
   );
