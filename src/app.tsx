@@ -3,13 +3,17 @@
 // Global initial data configuration, used for initializing user info and permissions in the Layout
 // For more information, see the documentation: https://umijs.org/docs/api/runtime-config#getinitialstate
 import { LOGO_COMPACT, LOGO_ICON } from '@/assets';
+import { useSiderCollapse } from '@/hooks/siderCollapse';
+import type { RunTimeLayoutConfig } from '@umijs/max';
 import useBreakpoint from 'antd/lib/grid/hooks/useBreakpoint';
 import React from 'react';
 
-type InitialState = {
+export type CollapseType = 'clickTrigger' | 'responsive';
+
+export type InitialState = {
   name: string;
   collapsed?: boolean;
-  collapseType?: 'clickTrigger' | 'responsive';
+  collapseType?: CollapseType;
 };
 
 export async function getInitialState(): Promise<InitialState> {
@@ -20,7 +24,9 @@ type LogoProps = {
   collapsed?: boolean;
 };
 
-const Logo: React.FC<LogoProps> = ({ collapsed }) => {
+const Logo: React.FC<LogoProps> = ({ collapsed: collapsedProp }) => {
+  const { collapsed } = useSiderCollapse();
+  const effectiveCollapsed = collapsedProp ?? collapsed;
   const screens = useBreakpoint();
   const isMobile = !screens.md;
 
@@ -28,7 +34,7 @@ const Logo: React.FC<LogoProps> = ({ collapsed }) => {
     if (isMobile) {
       return LOGO_COMPACT;
     }
-    return collapsed ? LOGO_ICON : LOGO_COMPACT;
+    return effectiveCollapsed ? LOGO_ICON : LOGO_COMPACT;
   };
 
   return (
@@ -52,7 +58,7 @@ const Logo: React.FC<LogoProps> = ({ collapsed }) => {
           }}
         />
       </div>
-      {!isMobile && !collapsed && (
+      {!isMobile && !effectiveCollapsed && (
         <div
           style={{
             fontSize: 16,
@@ -69,39 +75,22 @@ const Logo: React.FC<LogoProps> = ({ collapsed }) => {
   );
 };
 
-export const layout: ({
+export const layout: RunTimeLayoutConfig<InitialState> = ({
   initialState,
   setInitialState,
-}: {
-  initialState: unknown;
-  setInitialState: unknown;
-}) => {
-  title: boolean;
-  menuHeaderRender: (
-    _logoDom: React.ReactNode,
-    _title: React.ReactNode,
-    props: unknown,
-  ) => React.JSX.Element;
-  onCollapse: (
-    collapsed: boolean,
-    type?: 'clickTrigger' | 'responsive',
-  ) => void;
-} = ({ initialState, setInitialState }) => ({
+}) => ({
   title: false,
   // Use a custom header to react to collapse state and responsive behavior
   menuHeaderRender: (
     _logoDom: React.ReactNode,
     _title: React.ReactNode,
-    props: unknown,
+    props: any,
   ) => <Logo collapsed={props?.collapsed ?? initialState?.collapsed} />,
-  onCollapse: (collapsed: boolean, type?: 'clickTrigger' | 'responsive') => {
-    setInitialState?.((s) => ({
+  onCollapse: (collapsed: boolean, type?: CollapseType) => {
+    setInitialState?.((s: object) => ({
       ...s,
       collapsed,
       collapseType: type,
     }));
-    // For quick debugging
-    // eslint-disable-next-line no-console
-    console.log('Sidebar collapsed?:', collapsed, 'type:', type);
   },
 });
