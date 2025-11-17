@@ -22,6 +22,7 @@ export default defineConfig({
   locale: {
     default: 'es-ES',
     antd: true,
+    baseNavigator: false,
   },
   layout: {
     title: 'Southbay',
@@ -32,13 +33,13 @@ export default defineConfig({
       path: '/login',
       component: '@/pages/Login',
       name: 'Ingreso',
-      title: 'Ingresar',
+      title: 'Ingreso',
       layout: false,
     },
     {
       path: '/',
       name: 'Inicio',
-      title: '',
+      title: 'Inicio',
       component: './Home',
       wrappers: ['@/wrappers/auth'],
     },
