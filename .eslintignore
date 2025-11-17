@@ -1,0 +1,2 @@
+# Re-include the Umi config dotfile so ESLint doesn't ignore it by default
+!.umirc.ts

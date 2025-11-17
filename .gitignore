@@ -14,3 +14,6 @@
 
 # jetbrains
 /.idea
+
+# vscode
+/.vscode

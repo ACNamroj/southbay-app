@@ -1,0 +1,59 @@
+// Global styles
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: Roboto, 'TT Firs Neue', -apple-system, BlinkMacSystemFont,
+    'Segoe UI', 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:root {
+  --primary-color: #ff5200; // Default Ant Design primary color
+  --secondary-color: #52c41a;
+  --text-color: rgba(0, 0, 0, 85%);
+  --border-radius-base: 8px;
+  --link-color: #0449dd;
+
+  // Core brand colors
+  --brand-black: #000; // Black
+  --brand-white: #fff; // White
+  --brand-orange: #ff5200; // Pantone Orange 021
+  --brand-yellow: #ffb71a; // Pantone 123
+
+  // Grayscale
+  --brand-light-gray: #dbdbda;
+  --brand-gray: #8e8b8a;
+  --brand-mid-gray: #65625f;
+  --brand-dark-gray: #484442;
+
+  // Orange scale (tints/shades)
+  --brand-orange-lighter: #ffd6ba;
+  --brand-orange-light: #ffad78;
+  --brand-orange-mid: #ff8c43;
+  --brand-orange-dark: #dc4d28;
+
+  // Yellow scale (tints/shades)
+  --brand-yellow-light: #ffd6ba;
+  --brand-yellow-mid: #ffc962;
+  --brand-yellow-dark: #d49815;
+}
+
+// Override Ant Design variables
+@primary-color: var(--brand-orange);
+@secondary-color: var(--brand-yellow);
+@border-radius-base: var(--border-radius-base);
+@text-color: var(--brand-black);
+
+// login
+.ant-pro-form-login-page-header {
+  display: block;
+  margin-bottom: 42px;
+}
+
+.ant-pro-form-login-page-notice {
+  display: none;
+}

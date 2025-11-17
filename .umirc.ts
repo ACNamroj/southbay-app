@@ -1,7 +1,18 @@
 import { defineConfig } from '@umijs/max';
 
 export default defineConfig({
-  antd: {},
+  antd: {
+    dark: false,
+    compact: false,
+    theme: {
+      token: {
+        colorPrimary: '#FF5200',
+        colorBgBase: '#FFFFFF',
+        colorBorder: '#D9D9D9',
+        borderRadius: 8,
+      },
+    },
+  },
   access: {},
   model: {},
   initialState: {},
@@ -9,30 +20,34 @@ export default defineConfig({
   locale: {
     default: 'es-ES',
     antd: true,
-    title: false,
-    baseNavigator: false,
   },
   layout: {
     title: 'Southbay',
   },
+  favicons: ['/icons/favicon.ico'],
   routes: [
     {
-      path: '/',
-      redirect: '/home',
+      path: '/login',
+      component: '@/pages/Login',
+      name: 'Ingreso',
+      title: 'Ingresar',
+      layout: false,
     },
     {
+      path: '/',
       name: 'Inicio',
-      path: '/home',
+      title: '',
       component: './Home',
     },
     {
-      name: 'Acceso',
       path: '/access',
+      name: 'Acceso',
+      title: 'Acceso',
       component: './Access',
     },
     {
-      name: ' CRUD',
       path: '/table',
+      name: 'CRUD',
       component: './Table',
     },
   ],
