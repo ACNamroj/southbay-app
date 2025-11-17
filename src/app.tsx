@@ -3,7 +3,7 @@
 // Global initial data configuration, used for initializing user info and permissions in the Layout
 // For more information, see the documentation: https://umijs.org/docs/api/runtime-config#getinitialstate
 import { LOGO_COMPACT, LOGO_ICON } from '@/assets';
-import { useSiderCollapse } from '@/hooks/siderCollapse';
+import { useSiderCollapse } from '@/hooks/useSiderCollapse';
 import type { RunTimeLayoutConfig } from '@umijs/max';
 import useBreakpoint from 'antd/lib/grid/hooks/useBreakpoint';
 import React from 'react';

@@ -1,21 +1,30 @@
 import { LOGO } from '@/assets';
+import { useAuthToken } from '@/hooks/auth/useAuthToken';
+import { useSiderCollapse } from '@/hooks/useSiderCollapse';
+import { login } from '@/services/login/loginService';
+import type { LoginRequest } from '@/types/auth';
 import { LoginFormPage, ProFormText } from '@ant-design/pro-components';
-import { Link } from '@umijs/max';
-import { theme } from 'antd';
+import { history, Link } from '@umijs/max';
+import { message, theme } from 'antd';
 import useBreakpoint from 'antd/lib/grid/hooks/useBreakpoint';
-import React from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
 const Login: React.FC = () => {
   const { token } = theme.useToken();
   const screens = useBreakpoint();
   const isMobile = !screens.md;
+  const { collapsed, setCollapsed } = useSiderCollapse();
+  const { setAuthTokens, isAuthTokenValid } = useAuthToken();
 
-  const inputStyle: React.CSSProperties = {
-    borderRadius: token.borderRadius,
-    borderColor: token.colorBorder,
-    opacity: 0.7,
-    width: '100%',
-  };
+  const inputStyle = useMemo<React.CSSProperties>(
+    () => ({
+      borderRadius: token.borderRadius,
+      borderColor: token.colorBorder,
+      opacity: 0.7,
+      width: '100%',
+    }),
+    [token.borderRadius, token.colorBorder],
+  );
 
   const label = (text: string) => (
     <span
@@ -27,6 +36,42 @@ const Login: React.FC = () => {
     >
       {text}
     </span>
+  );
+
+  useEffect(() => {
+    if (collapsed) {
+      setCollapsed(false);
+    }
+  }, [collapsed, setCollapsed]);
+
+  useEffect(() => {
+    if (isAuthTokenValid()) {
+      history.push('/');
+    }
+  }, [isAuthTokenValid]);
+
+  const handleFinish = useCallback(
+    async (values: LoginRequest) => {
+      try {
+        const response = await login(values);
+        if (response?.success && response?.data) {
+          setAuthTokens({
+            token: response.data.token,
+            refreshToken: response.data.refresh_token,
+            expiresAt: response.data.expires_at,
+            tokenType: response.data.token_type,
+          });
+          history.push('/');
+          return true;
+        }
+        message.error(response?.message || 'Credenciales inválidas');
+        return false;
+      } catch (error) {
+        message.error('No pudimos iniciar sesión. Inténtalo de nuevo.');
+        return false;
+      }
+    },
+    [setAuthTokens],
   );
 
   return (
@@ -99,12 +144,10 @@ const Login: React.FC = () => {
         colon={false}
         layout="vertical"
         autoComplete="off"
-        onFinish={async () => {
-          return true;
-        }}
+        onFinish={handleFinish}
       >
         <ProFormText
-          name="email"
+          name="username"
           label={label('Correo')}
           placeholder=""
           rules={[

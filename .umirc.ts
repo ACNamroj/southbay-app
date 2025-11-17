@@ -40,17 +40,20 @@ export default defineConfig({
       name: 'Inicio',
       title: '',
       component: './Home',
+      wrappers: ['@/wrappers/auth'],
     },
     {
       path: '/access',
       name: 'Acceso',
       title: 'Acceso',
       component: './Access',
+      wrappers: ['@/wrappers/auth'],
     },
     {
       path: '/table',
       name: 'CRUD',
       component: './Table',
+      wrappers: ['@/wrappers/auth'],
     },
   ],
   define: {
