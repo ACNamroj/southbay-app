@@ -4,15 +4,47 @@
 // For more information, see the documentation: https://umijs.org/docs/api/runtime-config#getinitialstate
 import { LOGO_COMPACT, LOGO_ICON } from '@/assets';
 import { useSiderCollapse } from '@/hooks/useSiderCollapse';
+import { refreshAuthToken } from '@/services/auth/tokenService';
+import type { StoredAuthTokens } from '@/types/auth';
+import {
+  clearStoredAuthTokens,
+  getStoredAuthorizationHeader,
+  isStoredAccessTokenValid,
+  mapApiTokensToStored,
+  persistStoredAuthTokens,
+  readRefreshTokenCookie,
+  readStoredAuthTokens,
+} from '@/utils/authTokens';
 import {
   persistSidebarCollapsed,
   readSidebarCollapsed,
 } from '@/utils/sidebarStorage';
-import type { RunTimeLayoutConfig } from '@umijs/max';
+import type { MenuDataItem } from '@ant-design/pro-layout/lib/typing';
+import type {
+  AxiosError,
+  AxiosRequestConfig,
+  RequestConfig,
+  RunTimeLayoutConfig,
+} from '@umijs/max';
+import { getRequestInstance, history } from '@umijs/max';
 import useBreakpoint from 'antd/lib/grid/hooks/useBreakpoint';
 import React from 'react';
 
 export type CollapseType = 'clickTrigger' | 'responsive';
+
+// Remove ProLayout's tooltip wrapper to avoid rc-resize-observer findDOMNode warnings in React 18.
+const disableMenuTooltip = (menuItems: MenuDataItem[] = []): MenuDataItem[] =>
+  menuItems.map((item) => {
+    const patchedChildren = item.children
+      ? disableMenuTooltip(item.children)
+      : undefined;
+
+    return {
+      ...item,
+      disabledTooltip: true,
+      children: patchedChildren,
+    };
+  });
 
 export type InitialState = {
   name: string;
@@ -80,6 +112,131 @@ const Logo: React.FC<LogoProps> = ({ collapsed: collapsedProp }) => {
   );
 };
 
+const AUTH_EXCLUDED_PATHS = ['/auth/login', '/auth/refresh'];
+
+const isAuthRequest = (url?: string) => {
+  if (!url) {
+    return false;
+  }
+  return AUTH_EXCLUDED_PATHS.some((path) =>
+    url.toLowerCase().includes(path.toLowerCase()),
+  );
+};
+
+const applyAuthorizationHeader = (
+  config: AxiosRequestConfig,
+  value?: string,
+) => {
+  if (!value) {
+    return;
+  }
+  if (!config.headers) {
+    config.headers = {};
+  }
+  const headers = config.headers as any;
+  if (headers && typeof headers.set === 'function') {
+    headers.set('Authorization', value);
+    return;
+  }
+  config.headers = {
+    ...(headers || {}),
+    Authorization: value,
+  };
+};
+
+const handleUnauthorized = () => {
+  clearStoredAuthTokens();
+  if (typeof window === 'undefined') {
+    return;
+  }
+  if (history.location.pathname !== '/login') {
+    history.replace('/login');
+  }
+};
+
+const executeTokenRefresh = async (): Promise<StoredAuthTokens | undefined> => {
+  const tokens = readStoredAuthTokens();
+  const refreshToken = tokens?.refreshToken ?? readRefreshTokenCookie();
+  if (!refreshToken) {
+    return undefined;
+  }
+  try {
+    const response = await refreshAuthToken(refreshToken);
+    if (response?.success && response?.data) {
+      const mapped = mapApiTokensToStored(response.data);
+      persistStoredAuthTokens(mapped);
+      return mapped;
+    }
+  } catch (error) {
+    // Ignore and clear tokens below
+  }
+  clearStoredAuthTokens();
+  return undefined;
+};
+
+let refreshPromise: Promise<StoredAuthTokens | undefined> | null = null;
+
+const queueTokenRefresh = () => {
+  if (!refreshPromise) {
+    const pending = executeTokenRefresh().finally(() => {
+      if (refreshPromise === pending) {
+        refreshPromise = null;
+      }
+    });
+    refreshPromise = pending;
+  }
+  return refreshPromise;
+};
+
+const authRequestInterceptor = async (config: AxiosRequestConfig) => {
+  if (
+    typeof window === 'undefined' ||
+    config.skipAuthRefresh ||
+    isAuthRequest(config.url)
+  ) {
+    return config;
+  }
+  if (!isStoredAccessTokenValid()) {
+    const refreshed = await queueTokenRefresh();
+    if (!refreshed?.token) {
+      handleUnauthorized();
+      return config;
+    }
+  }
+  const header = getStoredAuthorizationHeader();
+  if (header) {
+    applyAuthorizationHeader(config, header);
+  }
+  return config;
+};
+
+const authResponseErrorInterceptor = async (error: AxiosError) => {
+  const { response, config } = error;
+
+  if (
+    typeof window !== 'undefined' &&
+    response?.status === 401 &&
+    config &&
+    !config.skipAuthRefresh &&
+    !config._retry &&
+    !isAuthRequest(config.url)
+  ) {
+    const refreshed = await queueTokenRefresh();
+    if (refreshed?.token) {
+      config._retry = true;
+      config.skipAuthRefresh = true;
+      applyAuthorizationHeader(
+        config,
+        `${refreshed.tokenType || 'Bearer'} ${refreshed.token}`,
+      );
+      return getRequestInstance().request(config);
+    }
+    handleUnauthorized();
+  }
+
+  return Promise.reject(error);
+};
+
 export const layout: RunTimeLayoutConfig<InitialState> = ({
   initialState,
   setInitialState,
@@ -99,4 +256,15 @@ export const layout: RunTimeLayoutConfig<InitialState> = ({
     }));
     persistSidebarCollapsed(collapsed);
   },
+  menuDataRender: disableMenuTooltip,
 });
+
+export const request: RequestConfig = {
+  requestInterceptors: [authRequestInterceptor],
+  responseInterceptors: [
+    [
+      (response) => response,
+      (error: AxiosError) => authResponseErrorInterceptor(error),
+    ] as any,
+  ],
+};

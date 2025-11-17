@@ -3,6 +3,7 @@ import { useAuthToken } from '@/hooks/auth/useAuthToken';
 import { useSiderCollapse } from '@/hooks/useSiderCollapse';
 import { login } from '@/services/login/loginService';
 import type { LoginRequest } from '@/types/auth';
+import { mapApiTokensToStored } from '@/utils/authTokens';
 import { LoginFormPage, ProFormText } from '@ant-design/pro-components';
 import { history, Link } from '@umijs/max';
 import { message, theme } from 'antd';
@@ -55,12 +56,7 @@ const Login: React.FC = () => {
       try {
         const response = await login(values);
         if (response?.success && response?.data) {
-          setAuthTokens({
-            token: response.data.token,
-            refreshToken: response.data.refresh_token,
-            expiresAt: response.data.expires_at,
-            tokenType: response.data.token_type,
-          });
+          setAuthTokens(mapApiTokensToStored(response.data));
           history.push('/');
           return true;
         }
@@ -150,6 +146,11 @@ const Login: React.FC = () => {
           name="username"
           label={label('Correo')}
           placeholder=""
+          fieldProps={{
+            size: 'middle',
+            style: inputStyle,
+            autoComplete: 'email',
+          }}
           rules={[
             {
               required: true,
@@ -160,10 +161,6 @@ const Login: React.FC = () => {
               message: 'Por favor ingresa un correo válido',
             },
           ]}
-          fieldProps={{
-            size: 'middle',
-            style: inputStyle,
-          }}
           formItemProps={{
             style: { marginBottom: 30 },
           }}
@@ -181,6 +178,7 @@ const Login: React.FC = () => {
           fieldProps={{
             size: 'middle',
             style: inputStyle,
+            autoComplete: 'current-password',
           }}
         />
       </LoginFormPage>
