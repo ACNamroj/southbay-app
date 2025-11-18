@@ -32,7 +32,14 @@ import {
   type RequestConfig,
   type RunTimeLayoutConfig,
 } from '@umijs/max';
-import { Avatar, Button, Modal, type AvatarProps } from 'antd';
+import {
+  Avatar,
+  Button,
+  Dropdown,
+  Modal,
+  type AvatarProps,
+  type MenuProps,
+} from 'antd';
 import useBreakpoint from 'antd/lib/grid/hooks/useBreakpoint';
 import React, { useCallback } from 'react';
 
@@ -104,11 +111,9 @@ const Logo: React.FC<LogoProps> = ({ collapsed: collapsedProp }) => {
       {!isMobile && !effectiveCollapsed && (
         <div
           style={{
-            fontSize: 16,
-            color: '#000',
+            fontSize: 12,
             fontWeight: 'bold',
             textAlign: 'center',
-            lineHeight: 1.2,
           }}
         >
           Descuento de Empleados
@@ -121,6 +126,7 @@ const Logo: React.FC<LogoProps> = ({ collapsed: collapsedProp }) => {
 const UserMenuFooter: React.FC = () => {
   const { currentUser, clearCurrentUser } = useModel('user');
   const { removeAuthTokens } = useAuthToken();
+  const { collapsed } = useSiderCollapse();
 
   const profile = currentUser?.profile;
   const displayName =
@@ -141,7 +147,7 @@ const UserMenuFooter: React.FC = () => {
     try {
       await logout();
     } catch (error) {
-      // Ignore errors: user will be logged out locally anyway
+      console.error('Logout error:', error);
     }
     removeAuthTokens();
     clearCurrentUser();
@@ -159,47 +165,87 @@ const UserMenuFooter: React.FC = () => {
     });
   }, [handleConfirmLogout]);
 
+  const handleUserMenuClick = useCallback<NonNullable<MenuProps['onClick']>>(
+    ({ key }) => {
+      if (key === 'logout') {
+        handleLogoutClick();
+      }
+    },
+    [handleLogoutClick],
+  );
+
+  const userMenuItems = [
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: 'Cerrar sesión',
+    },
+  ];
+
+  if (!currentUser) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'end',
+        }}
+      >
+        <Button
+          type="text"
+          block={!collapsed}
+          icon={<LogoutOutlined />}
+          style={{
+            justifyContent: collapsed ? 'center' : 'flex-start',
+            paddingLeft: collapsed ? 0 : undefined,
+          }}
+          onClick={handleLogoutClick}
+        >
+          {!collapsed && 'Cerrar sesión'}
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: 12,
-        padding: '12px 16px',
-        borderTop: '1px solid rgba(0, 0, 0, 0.06)',
+        alignItems: 'end',
       }}
     >
-      {currentUser && (
-        <div
+      <Dropdown
+        trigger={['click']}
+        menu={{ items: userMenuItems, onClick: handleUserMenuClick }}
+        placement="topRight"
+      >
+        <Button
+          type="text"
+          block={!collapsed}
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 8,
+            gap: collapsed ? 0 : 8,
+            justifyContent: collapsed ? 'center' : 'flex-end',
+            paddingLeft: collapsed ? 0 : undefined,
           }}
         >
           <Avatar {...avatarProps} />
-          <span
-            style={{
-              fontWeight: 500,
-              fontSize: 13,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}
-          >
-            {displayName}
-          </span>
-        </div>
-      )}
-      <Button
-        type="text"
-        block
-        icon={<LogoutOutlined />}
-        style={{ justifyContent: 'flex-start', paddingLeft: 0 }}
-        onClick={handleLogoutClick}
-      >
-        Cerrar sesión
-      </Button>
+
+          {!collapsed && (
+            <span
+              style={{
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {displayName}
+            </span>
+          )}
+        </Button>
+      </Dropdown>
     </div>
   );
 };
@@ -260,7 +306,7 @@ const executeTokenRefresh = async (): Promise<StoredAuthTokens | undefined> => {
       return mapped;
     }
   } catch (error) {
-    // Ignore and clear tokens below
+    console.error('Token refresh error:', error);
   }
   clearStoredAuthTokens();
   return undefined;
