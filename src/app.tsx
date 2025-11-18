@@ -22,7 +22,7 @@ import {
   readSidebarCollapsed,
 } from '@/utils/sidebarStorage';
 import { LogoutOutlined, UserOutlined } from '@ant-design/icons';
-import type { MenuDataItem } from '@ant-design/pro-layout/lib/typing';
+import type { MenuDataItem } from '@ant-design/pro-components';
 import {
   getRequestInstance,
   history,
