@@ -113,6 +113,10 @@ body,
       color: var(--brand-black) !important;
     }
 
+    .ant-menu-title-content {
+      font-weight: 600;
+    }
+
     .ant-menu-item-selected .ant-menu-item-icon,
     .ant-menu-item-selected .ant-menu-title-content,
     .ant-menu-item-active .ant-menu-item-icon,
@@ -121,7 +125,47 @@ body,
     .ant-menu-submenu-selected
       > .ant-menu-submenu-title
       .ant-menu-title-content {
-      color: var(--brand-black) !important;
+      color: var(--brand-black);
+    }
+  }
+}
+
+// Align the user dropdown items to the right edge
+.user-menu-dropdown-menu {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  justify-self: right;
+  text-align: right;
+
+  .ant-dropdown-menu-item {
+    display: inline-flex;
+  }
+}
+
+// Hide menu titles when sidebar is collapsed on desktop
+.menu-item-icon-only {
+  .ant-pro-base-menu-item-title,
+  .ant-menu-title-content {
+    display: none;
+  }
+}
+
+// Center icons when the sider is collapsed on desktop
+.ant-layout-sider-collapsed {
+  .ant-menu-light,
+  .ant-menu-light.ant-menu-root,
+  .ant-menu.ant-menu-root.ant-menu-inline {
+    .ant-menu-item,
+    .ant-menu-submenu-title {
+      padding-inline: 0 !important;
+      justify-content: center;
+    }
+
+    .ant-menu-item-icon {
+      margin-inline-end: 0;
+      display: flex;
+      justify-content: center;
     }
   }
 }

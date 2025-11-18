@@ -50,6 +50,7 @@ export default defineConfig({
       title: 'Gestión de Tiendas',
       component: './Stores',
       wrappers: ['@/wrappers/auth'],
+      icon: 'stores',
     },
     {
       path: '/people',
@@ -57,6 +58,7 @@ export default defineConfig({
       title: 'Gestión de Personas',
       component: './People',
       wrappers: ['@/wrappers/auth'],
+      icon: 'people',
     },
     {
       path: '/users',
@@ -64,6 +66,7 @@ export default defineConfig({
       title: 'Gestión de Usuarios',
       component: './Users',
       wrappers: ['@/wrappers/auth'],
+      icon: 'users',
     },
     {
       path: '/segmentation',
@@ -71,6 +74,7 @@ export default defineConfig({
       title: 'Gestión de Segmentaciones',
       component: './Segmentation',
       wrappers: ['@/wrappers/auth'],
+      icon: 'segmentation',
     },
   ],
   define: {

@@ -21,9 +21,16 @@ import {
   persistSidebarCollapsed,
   readSidebarCollapsed,
 } from '@/utils/sidebarStorage';
-import { LogoutOutlined, UserOutlined } from '@ant-design/icons';
+import {
+  LogoutOutlined,
+  SettingOutlined,
+  ShopOutlined,
+  TeamOutlined,
+  UserOutlined,
+} from '@ant-design/icons';
 import type { MenuDataItem } from '@ant-design/pro-components';
 import {
+  Link,
   getRequestInstance,
   history,
   useModel,
@@ -45,15 +52,25 @@ import React, { useCallback } from 'react';
 
 export type CollapseType = 'clickTrigger' | 'responsive';
 
-const disableMenuTooltip = (menuItems: MenuDataItem[] = []): MenuDataItem[] =>
+const MENU_ICON_MAP: Record<string, React.ComponentType> = {
+  stores: ShopOutlined,
+  people: TeamOutlined,
+  users: UserOutlined,
+  segmentation: SettingOutlined,
+};
+
+const normalizeMenuItems = (menuItems: MenuDataItem[] = []): MenuDataItem[] =>
   menuItems.map((item) => {
     const patchedChildren = item.children
-      ? disableMenuTooltip(item.children)
+      ? normalizeMenuItems(item.children)
       : undefined;
+    const iconKey =
+      typeof item.icon === 'string' ? MENU_ICON_MAP[item.icon] : undefined;
 
     return {
       ...item,
       disabledTooltip: true,
+      icon: iconKey ? React.createElement(iconKey) : item.icon,
       children: patchedChildren,
     };
   });
@@ -216,7 +233,11 @@ const UserMenuFooter: React.FC = () => {
     >
       <Dropdown
         trigger={['click']}
-        menu={{ items: userMenuItems, onClick: handleUserMenuClick }}
+        menu={{
+          items: userMenuItems,
+          onClick: handleUserMenuClick,
+          className: 'user-menu-dropdown-menu',
+        }}
         placement="topRight"
       >
         <Button
@@ -393,7 +414,66 @@ export const layout: RunTimeLayoutConfig<InitialState> = ({
     }));
     persistSidebarCollapsed(collapsed);
   },
-  menuDataRender: disableMenuTooltip,
+  menuDataRender: normalizeMenuItems,
+  menuItemRender: (itemProps, defaultDom, menuProps) => {
+    let content = defaultDom;
+    if (
+      !menuProps?.isMobile &&
+      menuProps?.collapsed &&
+      React.isValidElement(defaultDom)
+    ) {
+      const nextClassName = [defaultDom.props?.className, 'menu-item-icon-only']
+        .filter(Boolean)
+        .join(' ');
+      content = React.cloneElement(defaultDom, { className: nextClassName });
+    }
+
+    const handleMenuClick = (
+      event?: React.MouseEvent<
+        HTMLDivElement | HTMLAnchorElement | HTMLSpanElement
+      >,
+    ) => {
+      if (React.isValidElement(content)) {
+        content.props?.onClick?.(event);
+      }
+      if (menuProps?.isMobile) {
+        itemProps?.onClick?.();
+      }
+    };
+
+    if (itemProps?.isUrl && itemProps?.itemPath) {
+      return (
+        <a
+          href={itemProps.itemPath}
+          target="_blank"
+          rel="noreferrer"
+          onClick={handleMenuClick}
+        >
+          {content}
+        </a>
+      );
+    }
+
+    if (itemProps?.itemPath) {
+      return (
+        <Link
+          to={itemProps.itemPath}
+          replace={itemProps?.replace}
+          onClick={handleMenuClick}
+        >
+          {content}
+        </Link>
+      );
+    }
+
+    if (React.isValidElement(content)) {
+      return React.cloneElement(content, {
+        onClick: handleMenuClick,
+      });
+    }
+
+    return content;
+  },
   menuFooterRender: () => <UserMenuFooter />,
 });
 
