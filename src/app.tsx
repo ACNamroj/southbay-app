@@ -45,7 +45,6 @@ import React, { useCallback } from 'react';
 
 export type CollapseType = 'clickTrigger' | 'responsive';
 
-// Remove ProLayout's tooltip wrapper to avoid rc-resize-observer findDOMNode warnings in React 18.
 const disableMenuTooltip = (menuItems: MenuDataItem[] = []): MenuDataItem[] =>
   menuItems.map((item) => {
     const patchedChildren = item.children

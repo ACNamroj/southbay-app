@@ -1,6 +1,9 @@
 export default {
   'menu.Inicio': 'Inicio',
   'menu.Acceso': 'Acceso',
-  'menu.CRUD': 'CRUD',
   'menu.Ingreso': 'Ingreso',
+  'menu.Personas': 'Personas',
+  'menu.Segmentación': 'Segmentación',
+  'menu.Tiendas': 'Tiendas',
+  'menu.Usuarios': 'Usuarios',
 };

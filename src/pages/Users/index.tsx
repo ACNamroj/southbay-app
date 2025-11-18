@@ -1,21 +1,14 @@
 import { PageContainer } from '@ant-design/pro-components';
-import { Access, useAccess } from '@umijs/max';
-import { Button } from 'antd';
 import React from 'react';
 
 const AccessPage: React.FC = () => {
-  const access = useAccess();
   return (
     <PageContainer
       ghost
       header={{
-        title: 'Ejemplo de permisos',
+        title: 'Gestión de Usuarios',
       }}
-    >
-      <Access accessible={access.canSeeAdmin}>
-        <Button>Butón para administradores</Button>
-      </Access>
-    </PageContainer>
+    ></PageContainer>
   );
 };
 
