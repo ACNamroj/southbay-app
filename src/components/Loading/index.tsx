@@ -1,8 +1,7 @@
-// src/components/Loading/index.tsx
 import React from 'react';
 
 const Loading: React.FC = () => {
-  return <div>Loading...</div>;
+  return <div>Cargando...</div>;
 };
 
 export default Loading;

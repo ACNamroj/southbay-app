@@ -13,7 +13,7 @@ const Guide: React.FC<Props> = (props) => {
     <Layout>
       <Row>
         <Typography.Title level={3} className={styles.title}>
-          Bienvenido a <strong>{name}</strong>！
+          <strong>{name}</strong>
         </Typography.Title>
       </Row>
     </Layout>

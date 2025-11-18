@@ -102,16 +102,16 @@ const Logo: React.FC<LogoProps> = ({ collapsed: collapsedProp }) => {
           src={getLogo()}
           alt="Southbay"
           style={{
-            height: isMobile ? 40 : 50,
+            height: isMobile ? 40 : 60,
             maxWidth: '100%',
             objectFit: 'contain',
           }}
         />
       </div>
-      {!isMobile && !effectiveCollapsed && (
+      {((!isMobile && !effectiveCollapsed) || (isMobile && !collapsed)) && (
         <div
           style={{
-            fontSize: 12,
+            fontSize: 16,
             fontWeight: 'bold',
             textAlign: 'center',
           }}
