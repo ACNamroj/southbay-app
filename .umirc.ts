@@ -9,7 +9,7 @@ export default defineConfig({
         colorPrimary: '#FF5200',
         colorBgBase: '#FFFFFF',
         colorBorder: '#D9D9D9',
-        colorLink: '#0449DD',
+        colorLink: '#000000',
         colorText: '#000000',
         borderRadius: 8,
       },

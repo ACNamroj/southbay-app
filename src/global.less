@@ -12,12 +12,6 @@ body,
 }
 
 :root {
-  --primary-color: #ff5200; // Default Ant Design primary color
-  --secondary-color: #52c41a;
-  --text-color: #000;
-  --link-color: #0449dd;
-  --border-radius-base: 8px;
-
   // Core brand colors
   --brand-black: #000; // Black
   --brand-white: #fff; // White
@@ -34,12 +28,17 @@ body,
   --brand-orange-lighter: #ffd6ba;
   --brand-orange-light: #ffad78;
   --brand-orange-mid: #ff8c43;
-  --brand-orange-dark: #dc4d28;
-
+  --brand-orange-dark: #ff5200;
   // Yellow scale (tints/shades)
   --brand-yellow-light: #ffd6ba;
   --brand-yellow-mid: #ffc962;
   --brand-yellow-dark: #d49815;
+  --primary-color: var(--brand-orange); // Default Ant Design primary color
+  --secondary-color: #52c41a;
+  --text-color: #000;
+  --link-color: #0449dd;
+  --border-color: var(--brand-light-gray);
+  --border-radius-base: 8px;
 }
 
 // Override Ant Design variables
@@ -51,6 +50,65 @@ body,
 // logo
 .ant-pro-layout .ant-pro-sider-logo {
   justify-content: center;
+  align-items: center;
+  padding: 24px 16px 12px;
+  border-block-end: none;
+  width: 100%;
+}
+
+.sidebar-logo {
+  width: 100%;
+  padding: 0 0 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  border-bottom: 2px solid var(--border-color);
+  text-align: center;
+
+  &.mobile {
+    text-align: center;
+  }
+
+  &.mobile.collapsed {
+    border-bottom: none;
+    justify-content: flex-start;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  &.collapsed {
+    padding-block: 0;
+
+    &:not(.mobile) {
+      padding-block: 0 16px;
+    }
+  }
+
+  .tagline {
+    font-size: 16px;
+    font-weight: 900;
+    color: var(--brand-black);
+  }
+}
+
+.ant-pro-layout .ant-pro-global-header-logo {
+  width: 100%;
+
+  .sidebar-logo {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0;
+    border-bottom: none;
+    gap: 8px;
+    text-align: left;
+
+    .tagline {
+      display: none;
+    }
+  }
 }
 
 // login
@@ -69,6 +127,7 @@ body,
 
 .ant-pro-layout .ant-pro-sider .ant-layout-sider-children {
   padding-inline: 0;
+  border-inline-end: 2px solid var(--border-color);
 }
 
 // Sider menu active styles

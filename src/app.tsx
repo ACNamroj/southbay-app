@@ -88,13 +88,19 @@ export async function getInitialState(): Promise<InitialState> {
 
 type LogoProps = {
   collapsed?: boolean;
+  variant?: 'sider' | 'header';
 };
 
-const Logo: React.FC<LogoProps> = ({ collapsed: collapsedProp }) => {
+const Logo: React.FC<LogoProps> = ({
+  collapsed: collapsedProp,
+  variant = 'sider',
+}) => {
   const { collapsed } = useSiderCollapse();
   const effectiveCollapsed = collapsedProp ?? collapsed;
   const screens = useBreakpoint();
   const isMobile = !screens.md;
+  const showTagline =
+    variant !== 'header' && (isMobile ? !collapsed : !effectiveCollapsed);
 
   const getLogo = () => {
     if (isMobile) {
@@ -103,38 +109,28 @@ const Logo: React.FC<LogoProps> = ({ collapsed: collapsedProp }) => {
     return effectiveCollapsed ? LOGO_ICON : LOGO_COMPACT;
   };
 
+  const logoClassNames = [
+    'sidebar-logo',
+    effectiveCollapsed ? 'collapsed' : '',
+    isMobile ? 'mobile' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: isMobile ? 8 : 15,
-        padding: isMobile ? '8px 0' : 0,
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center' }}>
+    <div className={logoClassNames}>
+      <div>
         <img
           src={getLogo()}
           alt="Southbay"
           style={{
-            height: isMobile ? 40 : 60,
+            height: isMobile ? 42 : 56,
             maxWidth: '100%',
             objectFit: 'contain',
           }}
         />
       </div>
-      {((!isMobile && !effectiveCollapsed) || (isMobile && !collapsed)) && (
-        <div
-          style={{
-            fontSize: 16,
-            fontWeight: 'bold',
-            textAlign: 'center',
-          }}
-        >
-          Descuento de Empleados
-        </div>
-      )}
+      {showTagline && <div className="tagline">Descuento de Empleados</div>}
     </div>
   );
 };
@@ -402,10 +398,32 @@ export const layout: RunTimeLayoutConfig<InitialState> = ({
   title: false,
   // Use a custom header to react to collapse state and responsive behavior
   menuHeaderRender: (
-    _logoDom: React.ReactNode,
+    logoDom: React.ReactNode,
     _title: React.ReactNode,
     props: any,
-  ) => <Logo collapsed={props?.collapsed ?? initialState?.collapsed} />,
+  ) => {
+    const isHeader =
+      React.isValidElement(logoDom) &&
+      (logoDom.props?.className ?? '').includes('ant-pro-global-header-logo');
+
+    const logoNode = (
+      <Logo
+        collapsed={props?.collapsed ?? initialState?.collapsed}
+        variant={isHeader ? 'header' : 'sider'}
+      />
+    );
+
+    if (React.isValidElement(logoDom)) {
+      const { className, style } = logoDom.props ?? {};
+      return (
+        <div className={className} style={style}>
+          {logoNode}
+        </div>
+      );
+    }
+
+    return logoNode;
+  },
   onCollapse: (collapsed: boolean, type?: CollapseType) => {
     setInitialState?.((s: object) => ({
       ...s,
