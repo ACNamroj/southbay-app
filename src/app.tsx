@@ -2,78 +2,18 @@
 
 // Global initial data configuration, used for initializing user info and permissions in the Layout
 // For more information, see the documentation: https://umijs.org/docs/api/runtime-config#getinitialstate
-import { LOGO_COMPACT, LOGO_ICON } from '@/assets';
-import { useAuthToken } from '@/hooks/auth/useAuthToken';
-import { useSiderCollapse } from '@/hooks/useSiderCollapse';
-import { logout } from '@/services/auth/logoutService';
-import { refreshAuthToken } from '@/services/auth/tokenService';
-import type { StoredAuthTokens } from '@/types/auth';
-import {
-  clearStoredAuthTokens,
-  getStoredAuthorizationHeader,
-  isStoredAccessTokenValid,
-  mapApiTokensToStored,
-  persistStoredAuthTokens,
-  readRefreshTokenCookie,
-  readStoredAuthTokens,
-} from '@/utils/authTokens';
+import Logo from '@/layout/components/Logo';
+import UserMenuFooter from '@/layout/components/UserMenuFooter';
+import { normalizeMenuItems } from '@/layout/menu/utils';
+import { createRequestConfig } from '@/layout/request/interceptors';
 import {
   persistSidebarCollapsed,
   readSidebarCollapsed,
 } from '@/utils/sidebarStorage';
-import {
-  LogoutOutlined,
-  SettingOutlined,
-  ShopOutlined,
-  TeamOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
-import type { MenuDataItem } from '@ant-design/pro-components';
-import {
-  Link,
-  getRequestInstance,
-  history,
-  useModel,
-  type AxiosError,
-  type AxiosRequestConfig,
-  type RequestConfig,
-  type RunTimeLayoutConfig,
-} from '@umijs/max';
-import {
-  Avatar,
-  Button,
-  Dropdown,
-  Modal,
-  type AvatarProps,
-  type MenuProps,
-} from 'antd';
-import useBreakpoint from 'antd/lib/grid/hooks/useBreakpoint';
-import React, { useCallback } from 'react';
+import { Link, type RequestConfig, type RunTimeLayoutConfig } from '@umijs/max';
+import React from 'react';
 
 export type CollapseType = 'clickTrigger' | 'responsive';
-
-const MENU_ICON_MAP: Record<string, React.ComponentType> = {
-  stores: ShopOutlined,
-  people: TeamOutlined,
-  users: UserOutlined,
-  segmentation: SettingOutlined,
-};
-
-const normalizeMenuItems = (menuItems: MenuDataItem[] = []): MenuDataItem[] =>
-  menuItems.map((item) => {
-    const patchedChildren = item.children
-      ? normalizeMenuItems(item.children)
-      : undefined;
-    const iconKey =
-      typeof item.icon === 'string' ? MENU_ICON_MAP[item.icon] : undefined;
-
-    return {
-      ...item,
-      disabledTooltip: true,
-      icon: iconKey ? React.createElement(iconKey) : item.icon,
-      children: patchedChildren,
-    };
-  });
 
 export type InitialState = {
   name: string;
@@ -86,309 +26,29 @@ export async function getInitialState(): Promise<InitialState> {
   return { name: '', collapsed: storedCollapsed ?? false };
 }
 
-type LogoProps = {
-  collapsed?: boolean;
-  variant?: 'sider' | 'header';
-};
-
-const Logo: React.FC<LogoProps> = ({
-  collapsed: collapsedProp,
-  variant = 'sider',
-}) => {
-  const { collapsed } = useSiderCollapse();
-  const effectiveCollapsed = collapsedProp ?? collapsed;
-  const screens = useBreakpoint();
-  const isMobile = !screens.md;
-  const showTagline =
-    variant !== 'header' && (isMobile ? !collapsed : !effectiveCollapsed);
-
-  const getLogo = () => {
-    if (isMobile) {
-      return LOGO_COMPACT;
-    }
-    return effectiveCollapsed ? LOGO_ICON : LOGO_COMPACT;
-  };
-
-  const logoClassNames = [
-    'sidebar-logo',
-    effectiveCollapsed ? 'collapsed' : '',
-    isMobile ? 'mobile' : '',
-  ]
-    .filter(Boolean)
-    .join(' ');
-
-  return (
-    <div className={logoClassNames}>
-      <div>
-        <img
-          src={getLogo()}
-          alt="Southbay"
-          style={{
-            height: isMobile ? 42 : 56,
-            maxWidth: '100%',
-            objectFit: 'contain',
-          }}
-        />
-      </div>
-      {showTagline && <div className="tagline">Descuento de Empleados</div>}
-    </div>
-  );
-};
-
-const UserMenuFooter: React.FC = () => {
-  const { currentUser, clearCurrentUser } = useModel('user');
-  const { removeAuthTokens } = useAuthToken();
-  const { collapsed } = useSiderCollapse();
-
-  const profile = currentUser?.profile;
-  const displayName =
-    (currentUser &&
-      ([profile?.first_name, profile?.last_name].filter(Boolean).join(' ') ||
-        currentUser.email)) ||
-    undefined;
-
-  const avatarProps: AvatarProps = {};
-  if (profile?.thumbnail || profile?.photo) {
-    avatarProps.src = profile.thumbnail || profile.photo || undefined;
-  } else {
-    avatarProps.icon = <UserOutlined />;
-    avatarProps.size = 'small';
+const resolveLogoVariant = (logoDom: React.ReactNode): 'header' | 'sider' => {
+  if (
+    React.isValidElement(logoDom) &&
+    (logoDom.props?.className ?? '').includes('ant-pro-global-header-logo')
+  ) {
+    return 'header';
   }
+  return 'sider';
+};
 
-  const handleConfirmLogout = useCallback(async () => {
-    try {
-      await logout();
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-    removeAuthTokens();
-    clearCurrentUser();
-    history.replace('/login');
-  }, [removeAuthTokens, clearCurrentUser]);
-
-  const handleLogoutClick = useCallback(() => {
-    Modal.confirm({
-      title: 'Cerrar sesión',
-      content: '¿Seguro que deseas cerrar sesión?',
-      okText: 'Cerrar sesión',
-      cancelText: 'Cancelar',
-      centered: true,
-      onOk: handleConfirmLogout,
-    });
-  }, [handleConfirmLogout]);
-
-  const handleUserMenuClick = useCallback<NonNullable<MenuProps['onClick']>>(
-    ({ key }) => {
-      if (key === 'logout') {
-        handleLogoutClick();
-      }
-    },
-    [handleLogoutClick],
-  );
-
-  const userMenuItems = [
-    {
-      key: 'logout',
-      icon: <LogoutOutlined />,
-      label: 'Cerrar sesión',
-    },
-  ];
-
-  if (!currentUser) {
+const wrapLogo = (
+  logoDom: React.ReactNode,
+  content: React.ReactNode,
+): React.ReactNode => {
+  if (React.isValidElement(logoDom)) {
+    const { className, style } = logoDom.props ?? {};
     return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'end',
-        }}
-      >
-        <Button
-          type="text"
-          block={!collapsed}
-          icon={<LogoutOutlined />}
-          style={{
-            justifyContent: collapsed ? 'center' : 'flex-start',
-            paddingLeft: collapsed ? 0 : undefined,
-          }}
-          onClick={handleLogoutClick}
-        >
-          {!collapsed && 'Cerrar sesión'}
-        </Button>
+      <div className={className} style={style}>
+        {content}
       </div>
     );
   }
-
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'end',
-      }}
-    >
-      <Dropdown
-        trigger={['click']}
-        menu={{
-          items: userMenuItems,
-          onClick: handleUserMenuClick,
-          className: 'user-menu-dropdown-menu',
-        }}
-        placement="topRight"
-      >
-        <Button
-          type="text"
-          block={!collapsed}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: collapsed ? 0 : 8,
-            justifyContent: collapsed ? 'center' : 'flex-end',
-            paddingLeft: collapsed ? 0 : undefined,
-          }}
-        >
-          <Avatar {...avatarProps} />
-
-          {!collapsed && (
-            <span
-              style={{
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            >
-              {displayName}
-            </span>
-          )}
-        </Button>
-      </Dropdown>
-    </div>
-  );
-};
-
-const AUTH_EXCLUDED_PATHS = ['/auth/login', '/auth/refresh'];
-
-const isAuthRequest = (url?: string) => {
-  if (!url) {
-    return false;
-  }
-  return AUTH_EXCLUDED_PATHS.some((path) =>
-    url.toLowerCase().includes(path.toLowerCase()),
-  );
-};
-
-const applyAuthorizationHeader = (
-  config: AxiosRequestConfig,
-  value?: string,
-) => {
-  if (!value) {
-    return;
-  }
-  if (!config.headers) {
-    config.headers = {};
-  }
-  const headers = config.headers as any;
-  if (headers && typeof headers.set === 'function') {
-    headers.set('Authorization', value);
-    return;
-  }
-  config.headers = {
-    ...(headers || {}),
-    Authorization: value,
-  };
-};
-
-const handleUnauthorized = () => {
-  clearStoredAuthTokens();
-  if (typeof window === 'undefined') {
-    return;
-  }
-  if (history.location.pathname !== '/login') {
-    history.replace('/login');
-  }
-};
-
-const executeTokenRefresh = async (): Promise<StoredAuthTokens | undefined> => {
-  const tokens = readStoredAuthTokens();
-  const refreshToken = tokens?.refreshToken ?? readRefreshTokenCookie();
-  if (!refreshToken) {
-    return undefined;
-  }
-  try {
-    const response = await refreshAuthToken(refreshToken);
-    if (response?.success && response?.data) {
-      const mapped = mapApiTokensToStored(response.data);
-      persistStoredAuthTokens(mapped);
-      return mapped;
-    }
-  } catch (error) {
-    console.error('Token refresh error:', error);
-  }
-  clearStoredAuthTokens();
-  return undefined;
-};
-
-let refreshPromise: Promise<StoredAuthTokens | undefined> | null = null;
-
-const queueTokenRefresh = () => {
-  if (!refreshPromise) {
-    const pending = executeTokenRefresh().finally(() => {
-      if (refreshPromise === pending) {
-        refreshPromise = null;
-      }
-    });
-    refreshPromise = pending;
-  }
-  return refreshPromise;
-};
-
-const authRequestInterceptor = async (config: AxiosRequestConfig) => {
-  if (
-    typeof window === 'undefined' ||
-    config.skipAuthRefresh ||
-    isAuthRequest(config.url)
-  ) {
-    return config;
-  }
-  if (!isStoredAccessTokenValid()) {
-    const refreshed = await queueTokenRefresh();
-    if (!refreshed?.token) {
-      handleUnauthorized();
-      return config;
-    }
-  }
-  const header = getStoredAuthorizationHeader();
-  if (header) {
-    applyAuthorizationHeader(config, header);
-  }
-  return config;
-};
-
-const authResponseErrorInterceptor = async (error: AxiosError) => {
-  const { response, config } = error;
-
-  if (
-    typeof window !== 'undefined' &&
-    response?.status === 401 &&
-    config &&
-    !config.skipAuthRefresh &&
-    !config._retry &&
-    !isAuthRequest(config.url)
-  ) {
-    const refreshed = await queueTokenRefresh();
-    if (refreshed?.token) {
-      config._retry = true;
-      config.skipAuthRefresh = true;
-      applyAuthorizationHeader(
-        config,
-        `${refreshed.tokenType || 'Bearer'} ${refreshed.token}`,
-      );
-      return getRequestInstance().request(config);
-    }
-    handleUnauthorized();
-  }
-
-  return Promise.reject(error);
+  return content;
 };
 
 export const layout: RunTimeLayoutConfig<InitialState> = ({
@@ -396,33 +56,20 @@ export const layout: RunTimeLayoutConfig<InitialState> = ({
   setInitialState,
 }) => ({
   title: false,
-  // Use a custom header to react to collapse state and responsive behavior
   menuHeaderRender: (
     logoDom: React.ReactNode,
     _title: React.ReactNode,
     props: any,
   ) => {
-    const isHeader =
-      React.isValidElement(logoDom) &&
-      (logoDom.props?.className ?? '').includes('ant-pro-global-header-logo');
-
+    const variant = resolveLogoVariant(logoDom);
     const logoNode = (
       <Logo
         collapsed={props?.collapsed ?? initialState?.collapsed}
-        variant={isHeader ? 'header' : 'sider'}
+        variant={variant}
       />
     );
 
-    if (React.isValidElement(logoDom)) {
-      const { className, style } = logoDom.props ?? {};
-      return (
-        <div className={className} style={style}>
-          {logoNode}
-        </div>
-      );
-    }
-
-    return logoNode;
+    return wrapLogo(logoDom, logoNode);
   },
   onCollapse: (collapsed: boolean, type?: CollapseType) => {
     setInitialState?.((s: object) => ({
@@ -495,12 +142,4 @@ export const layout: RunTimeLayoutConfig<InitialState> = ({
   menuFooterRender: () => <UserMenuFooter />,
 });
 
-export const request: RequestConfig = {
-  requestInterceptors: [authRequestInterceptor],
-  responseInterceptors: [
-    [
-      (response) => response,
-      (error: AxiosError) => authResponseErrorInterceptor(error),
-    ] as any,
-  ],
-};
+export const request: RequestConfig = createRequestConfig();
