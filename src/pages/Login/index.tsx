@@ -62,11 +62,12 @@ const Login: React.FC = () => {
           history.push('/');
           return true;
         }
+
         message.error(response?.message || 'Credenciales inválidas');
         return false;
       } catch (error) {
         console.error('Login error:', error);
-        message.error('Credenciales inválidas');
+        message.error('Ocurrió un error. Por favor intenta nuevamente');
         return false;
       }
     },
