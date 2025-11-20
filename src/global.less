@@ -131,6 +131,10 @@ body,
 }
 
 // Sider menu active styles
+.ant-layout-sider {
+  background-color: var(--brand-white) !important;
+}
+
 .ant-pro-base-menu-vertical.ant-pro-base-menu-vertical-collapsed
   .ant-menu-item {
   margin-block: 0 !important;
@@ -162,7 +166,7 @@ body,
       border-radius: 0;
       margin: 0;
       padding-inline-start: 24px !important;
-      padding-inline-end: 12px !important;
+      padding-inline-end: 24px !important;
       min-height: 48px;
       transition: background-color 0.2s ease, border-color 0.2s ease;
     }
@@ -232,4 +236,9 @@ body,
       justify-content: center;
     }
   }
+}
+
+// Site content
+.ant-pro-layout .ant-pro-layout-bg-list {
+  background: linear-gradient(-45deg, var(--brand-white), #f3f3f6 30%);
 }
