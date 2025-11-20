@@ -19,5 +19,15 @@ export type StoredAuthTokens = {
 
 export type PasswordResetRequest = {
   email: string;
-  origin: 'WEB';
+  origin: 'web';
+};
+
+export type PasswordResetVerificationResponse = {
+  reset_token: string;
+  expires_at: string;
+};
+
+export type PasswordResetSubmitRequest = {
+  reset_token: string;
+  password: string;
 };

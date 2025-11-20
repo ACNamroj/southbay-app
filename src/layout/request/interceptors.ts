@@ -17,7 +17,13 @@ import {
   type AxiosRequestConfig,
 } from '@umijs/max';
 
-const AUTH_EXCLUDED_PATHS = ['/auth/login', '/auth/refresh'];
+const AUTH_EXCLUDED_PATHS = [
+  '/auth/login',
+  '/auth/refresh',
+  '/auth/initiate/password/reset',
+  '/auth/password/reset/verify-token',
+  '/auth/password/reset',
+];
 
 const isAuthRequest = (url?: string) => {
   if (!url) {

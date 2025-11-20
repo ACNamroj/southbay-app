@@ -44,6 +44,13 @@ export default defineConfig({
       layout: false,
     },
     {
+      path: '/reset-password/:resetToken',
+      component: '@/pages/ResetPassword',
+      name: 'Restablecer contraseña',
+      title: 'Restablecer contraseña',
+      layout: false,
+    },
+    {
       path: '/',
       name: 'Inicio',
       title: 'Inicio',

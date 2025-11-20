@@ -2,7 +2,7 @@ import { LOGO } from '@/assets';
 import { useSiderCollapse } from '@/hooks/useSiderCollapse';
 import { initiatePasswordReset } from '@/services/auth/passwordResetService';
 import { LoginFormPage, ProFormText } from '@ant-design/pro-components';
-import { Link } from '@umijs/max';
+import { history, Link } from '@umijs/max';
 import { message, theme } from 'antd';
 import useBreakpoint from 'antd/lib/grid/hooks/useBreakpoint';
 import React, { useCallback, useEffect, useMemo } from 'react';
@@ -49,14 +49,15 @@ const ForgotPassword: React.FC = () => {
     try {
       const response = await initiatePasswordReset({
         email: values.email,
-        origin: 'WEB',
+        origin: 'web',
       });
 
       if (response?.success) {
         message.success(
           response.message ??
-            'Se ha enviado un correo con las instrucciones para restablecer tu contraseña',
+            'Enviamos un correo con las instrucciones para restablecer tu contraseña',
         );
+        history.push('/login');
         return true;
       }
 
@@ -94,6 +95,7 @@ const ForgotPassword: React.FC = () => {
             />
           </Link>
         }
+        subTitle="Ingresa tu correo para solicitar el restablecimiento de contraseña."
         containerStyle={{
           background: token.colorBgBase,
           border: `1px solid ${token.colorBorder}`,
