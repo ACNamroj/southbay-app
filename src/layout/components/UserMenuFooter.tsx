@@ -1,22 +1,43 @@
+import PasswordPolicyChecklist from '@/components/PasswordPolicyChecklist';
 import { useAuthToken } from '@/hooks/auth/useAuthToken';
 import { useSiderCollapse } from '@/hooks/useSiderCollapse';
 import { logout } from '@/services/auth/logoutService';
-import { LogoutOutlined, UserOutlined } from '@ant-design/icons';
+import { updateCurrentUserPassword } from '@/services/user/passwordService';
+import {
+  evaluatePasswordPolicy,
+  PASSWORD_POLICY_REGEX,
+} from '@/utils/passwordPolicy';
+import { LockOutlined, LogoutOutlined, UserOutlined } from '@ant-design/icons';
 import { history, useModel } from '@umijs/max';
 import {
   Avatar,
   Button,
   Dropdown,
+  Form,
+  Input,
+  message,
   Modal,
   type AvatarProps,
   type MenuProps,
 } from 'antd';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 const UserMenuFooter: React.FC = () => {
   const { currentUser, clearCurrentUser } = useModel('user');
   const { removeAuthTokens } = useAuthToken();
   const { collapsed } = useSiderCollapse();
+  const [isPasswordModalOpen, setPasswordModalOpen] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [passwordForm] = Form.useForm();
+  const newPasswordValue = Form.useWatch('password', passwordForm) ?? '';
+  const passwordPolicyStatus = useMemo(
+    () => evaluatePasswordPolicy(newPasswordValue),
+    [newPasswordValue],
+  );
+  const isPasswordValid = useMemo(
+    () => Object.values(passwordPolicyStatus).every(Boolean),
+    [passwordPolicyStatus],
+  );
 
   const profile = currentUser?.profile;
   const displayName =
@@ -55,16 +76,54 @@ const UserMenuFooter: React.FC = () => {
     });
   }, [handleConfirmLogout]);
 
+  const handlePasswordModalClose = useCallback(() => {
+    setPasswordModalOpen(false);
+    passwordForm.resetFields();
+  }, [passwordForm]);
+
   const handleUserMenuClick = useCallback<NonNullable<MenuProps['onClick']>>(
     ({ key }) => {
+      if (key === 'change-password') {
+        setPasswordModalOpen(true);
+        return;
+      }
       if (key === 'logout') {
         handleLogoutClick();
       }
     },
     [handleLogoutClick],
   );
+  const handlePasswordSubmit = useCallback(async () => {
+    try {
+      const values = await passwordForm.validateFields();
+      setIsUpdatingPassword(true);
+      const response = await updateCurrentUserPassword({
+        current_password: values.currentPassword,
+        password: values.password,
+      });
+      if (response?.success) {
+        message.success(response.message ?? 'Contraseña actualizada con éxito');
+        handlePasswordModalClose();
+        return;
+      }
+      message.error(response?.message ?? 'No pudimos actualizar tu contraseña');
+    } catch (error: any) {
+      if (error?.errorFields) {
+        return;
+      }
+      console.error('Update password error:', error);
+      message.error('Ocurrió un error. Por favor intenta nuevamente.');
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  }, [passwordForm, handlePasswordModalClose]);
 
   const userMenuItems = [
+    {
+      key: 'change-password',
+      icon: <LockOutlined />,
+      label: 'Actualizar contraseña',
+    },
     {
       key: 'logout',
       icon: <LogoutOutlined />,
@@ -140,6 +199,92 @@ const UserMenuFooter: React.FC = () => {
           )}
         </Button>
       </Dropdown>
+      <Modal
+        centered
+        destroyOnClose
+        title="Actualizar contraseña"
+        open={isPasswordModalOpen}
+        okText="Actualizar"
+        cancelText="Cancelar"
+        onCancel={handlePasswordModalClose}
+        onOk={handlePasswordSubmit}
+        confirmLoading={isUpdatingPassword}
+      >
+        <Form form={passwordForm} layout="vertical">
+          <Form.Item
+            label="Contraseña actual"
+            name="currentPassword"
+            rules={[
+              {
+                required: true,
+                message: 'Por favor ingresa tu contraseña actual',
+              },
+            ]}
+          >
+            <Input.Password autoComplete="current-password" />
+          </Form.Item>
+          <Form.Item
+            label="Nueva contraseña"
+            name="password"
+            rules={[
+              {
+                required: true,
+                message: 'Por favor ingresa tu nueva contraseña',
+              },
+              {
+                validator: (_, value) => {
+                  if (!value) {
+                    return Promise.resolve();
+                  }
+                  if (PASSWORD_POLICY_REGEX.test(value)) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(
+                    new Error('La contraseña no cumple con los requisitos'),
+                  );
+                },
+              },
+            ]}
+            validateStatus={
+              newPasswordValue && !isPasswordValid ? 'error' : undefined
+            }
+            help={
+              newPasswordValue && !isPasswordValid
+                ? 'La contraseña no cumple con los requisitos'
+                : undefined
+            }
+          >
+            <Input.Password autoComplete="new-password" />
+          </Form.Item>
+          <PasswordPolicyChecklist status={passwordPolicyStatus} />
+          <Form.Item
+            label="Confirmar nueva contraseña"
+            name="confirmPassword"
+            dependencies={['password']}
+            rules={[
+              {
+                required: true,
+                message: 'Por favor confirma tu nueva contraseña',
+              },
+              ({ getFieldValue }) => ({
+                validator: (_, value) => {
+                  if (!value) {
+                    return Promise.resolve();
+                  }
+                  if (value === getFieldValue('password')) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(
+                    new Error('Las contraseñas no coinciden'),
+                  );
+                },
+              }),
+            ]}
+          >
+            <Input.Password autoComplete="new-password" />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };

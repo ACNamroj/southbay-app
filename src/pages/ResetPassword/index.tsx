@@ -1,9 +1,14 @@
 import { LOGO } from '@/assets';
+import PasswordPolicyChecklist from '@/components/PasswordPolicyChecklist';
 import { useSiderCollapse } from '@/hooks/useSiderCollapse';
 import {
   resetPassword,
   verifyPasswordResetToken,
 } from '@/services/auth/passwordResetService';
+import {
+  evaluatePasswordPolicy,
+  PASSWORD_POLICY_REGEX,
+} from '@/utils/passwordPolicy';
 import { LoginFormPage, ProFormText } from '@ant-design/pro-components';
 import { history, Link, useParams } from '@umijs/max';
 import { Alert, Form, message, Spin, theme } from 'antd';
@@ -18,9 +23,6 @@ type ResetPasswordFormValues = {
 type RouteParams = {
   resetToken?: string;
 };
-
-const PASSWORD_POLICY_REGEX =
-  /^(?=.*\p{Lu})(?=.*\p{Nd})(?=.*[^\p{L}\p{Nd}]).{8,}$/u;
 
 const ensureBuenosAiresDate = (value: string): Date => {
   const normalized = value.replace(' ', 'T');
@@ -74,12 +76,7 @@ const ResetPassword: React.FC = () => {
   );
 
   const policy = useMemo(
-    () => ({
-      length: passwordValue.length >= 8,
-      uppercase: /\p{Lu}/u.test(passwordValue),
-      digit: /\p{Nd}/u.test(passwordValue),
-      special: /[^\p{L}\p{Nd}]/u.test(passwordValue),
-    }),
+    () => evaluatePasswordPolicy(passwordValue),
     [passwordValue],
   );
 
@@ -215,13 +212,6 @@ const ResetPassword: React.FC = () => {
     },
     [validatedToken],
   );
-
-  const checklistItems = [
-    { key: 'length', label: '8 caracteres', satisfied: policy.length },
-    { key: 'uppercase', label: '1 mayúscula', satisfied: policy.uppercase },
-    { key: 'digit', label: '1 dígito', satisfied: policy.digit },
-    { key: 'special', label: '1 carácter especial', satisfied: policy.special },
-  ];
 
   const isFormDisabled =
     verifying || !!verificationError || isExpired || !validatedToken;
@@ -405,26 +395,7 @@ const ResetPassword: React.FC = () => {
                 style: { marginBottom: 0 },
               }}
             />
-            <div style={{ marginBottom: 24, marginTop: 8 }}>
-              {checklistItems.map((item) => (
-                <div
-                  key={item.key}
-                  style={{
-                    display: 'flex',
-                    gap: 8,
-                    alignItems: 'center',
-                    fontSize: 12,
-                    color: item.satisfied
-                      ? token.colorSuccess
-                      : token.colorError,
-                    lineHeight: 1.6,
-                  }}
-                >
-                  <span>•</span>
-                  <span>{item.label}</span>
-                </div>
-              ))}
-            </div>
+            <PasswordPolicyChecklist status={policy} />
             <ProFormText.Password
               name="confirmPassword"
               label="Confirmar contraseña"

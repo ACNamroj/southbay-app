@@ -208,13 +208,17 @@ body,
 // Align the user dropdown items to the right edge
 .user-menu-dropdown-menu {
   width: 100%;
-  display: flex;
-  justify-content: flex-end;
-  justify-self: right;
   text-align: right;
 
+  .ant-dropdown-menu {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
   .ant-dropdown-menu-item {
-    display: inline-flex;
+    display: flex;
+    justify-content: flex-end;
   }
 }
 
