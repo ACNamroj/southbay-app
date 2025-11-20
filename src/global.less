@@ -39,6 +39,13 @@ body,
   --link-color: #0449dd;
   --border-color: var(--brand-light-gray);
   --border-radius-base: 8px;
+
+  // Content
+  --content-background: linear-gradient(
+    -45deg,
+    var(--brand-white),
+    #f3f3f6 30%
+  );
 }
 
 // Override Ant Design variables
@@ -182,18 +189,14 @@ body,
     }
 
     .ant-menu-title-content {
-      font-weight: 600;
+      color: var(--brand-black);
+      font-weight: 500;
     }
 
     .ant-menu-item-selected .ant-menu-item-icon,
     .ant-menu-item-selected .ant-menu-title-content,
-    .ant-menu-item-active .ant-menu-item-icon,
-    .ant-menu-item-active .ant-menu-title-content,
-    .ant-menu-submenu-selected > .ant-menu-submenu-title .ant-menu-item-icon,
-    .ant-menu-submenu-selected
-      > .ant-menu-submenu-title
-      .ant-menu-title-content {
-      color: var(--brand-black);
+    > .ant-menu-submenu-title .ant-menu-title-content {
+      font-weight: 600;
     }
   }
 }
@@ -240,5 +243,5 @@ body,
 
 // Site content
 .ant-pro-layout .ant-pro-layout-bg-list {
-  background: linear-gradient(-45deg, var(--brand-white), #f3f3f6 30%);
+  background: var(--content-background);
 }

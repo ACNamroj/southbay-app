@@ -51,7 +51,7 @@ const wrapLogo = (
   return content;
 };
 
-export const layout: RunTimeLayoutConfig<InitialState> = ({
+export const layout: RunTimeLayoutConfig = ({
   initialState,
   setInitialState,
 }) => ({
