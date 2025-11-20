@@ -29,6 +29,7 @@ body,
   --brand-orange-light: #ffad78;
   --brand-orange-mid: #ff8c43;
   --brand-orange-dark: #ff5200;
+
   // Yellow scale (tints/shades)
   --brand-yellow-light: #ffd6ba;
   --brand-yellow-mid: #ffc962;
@@ -39,6 +40,9 @@ body,
   --link-color: #0449dd;
   --border-color: var(--brand-light-gray);
   --border-radius-base: 8px;
+
+  // Menu
+  --selected-menu-item: rgba(255, 214, 186, 30%);
 
   // Content
   --content-background: linear-gradient(
@@ -183,7 +187,7 @@ body,
     .ant-menu-item:hover,
     .ant-menu-submenu-selected > .ant-menu-submenu-title,
     .ant-menu-submenu-title:hover {
-      background-color: rgba(255, 214, 186, 30%) !important;
+      background-color: var(--selected-menu-item-background) !important;
       border-left-color: var(--brand-orange) !important;
       color: var(--brand-black) !important;
     }
