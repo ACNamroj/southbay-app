@@ -16,3 +16,8 @@ export type StoredAuthTokens = {
   expiresAt: string;
   tokenType: string;
 };
+
+export type PasswordResetRequest = {
+  email: string;
+  origin: 'WEB';
+};

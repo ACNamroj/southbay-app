@@ -37,6 +37,13 @@ export default defineConfig({
       layout: false,
     },
     {
+      path: '/forgot-password',
+      component: '@/pages/ForgotPassword',
+      name: 'Recuperar contraseña',
+      title: 'Recuperar contraseña',
+      layout: false,
+    },
+    {
       path: '/',
       name: 'Inicio',
       title: 'Inicio',
