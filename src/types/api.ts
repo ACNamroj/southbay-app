@@ -1,5 +1,8 @@
-export type ApiResponse<T> = {
-  success: boolean;
+export type ApiErrorResponse = {
   message?: string | null;
-  data: T | null;
+  messages?: string[] | null;
+};
+
+export type ApiMessageResponse = {
+  message?: string | null;
 };

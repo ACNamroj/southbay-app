@@ -1,26 +1,18 @@
 import { withBaseUrl } from '@/services/client';
-import type { ApiResponse } from '@/types/api';
+import type { ApiMessageResponse } from '@/types/api';
 import type {
   PasswordResetRequest,
   PasswordResetSubmitRequest,
   PasswordResetVerificationResponse,
 } from '@/types/auth';
-import { request, type AxiosError } from '@umijs/max';
-
-const handleRequestError = <T>(error: unknown): T => {
-  const axiosError = error as AxiosError<T>;
-  const responseData = axiosError.response?.data;
-  if (responseData) {
-    return responseData;
-  }
-  throw error;
-};
+import { normalizeApiError } from '@/utils/apiError';
+import { request } from '@umijs/max';
 
 export const initiatePasswordReset = async (
   body: PasswordResetRequest,
-): Promise<ApiResponse<null>> => {
+): Promise<ApiMessageResponse> => {
   try {
-    return await request<ApiResponse<null>>(
+    return await request<ApiMessageResponse>(
       withBaseUrl('/auth/initiate/password/reset'),
       {
         method: 'POST',
@@ -28,15 +20,15 @@ export const initiatePasswordReset = async (
       },
     );
   } catch (error) {
-    return handleRequestError<ApiResponse<null>>(error);
+    throw normalizeApiError(error);
   }
 };
 
 export const verifyPasswordResetToken = async (
   resetToken: string,
-): Promise<ApiResponse<PasswordResetVerificationResponse>> => {
+): Promise<PasswordResetVerificationResponse> => {
   try {
-    return await request<ApiResponse<PasswordResetVerificationResponse>>(
+    return await request<PasswordResetVerificationResponse>(
       withBaseUrl('/auth/password/reset/verify-token'),
       {
         method: 'POST',
@@ -46,17 +38,15 @@ export const verifyPasswordResetToken = async (
       },
     );
   } catch (error) {
-    return handleRequestError<ApiResponse<PasswordResetVerificationResponse>>(
-      error,
-    );
+    throw normalizeApiError(error);
   }
 };
 
 export const resetPassword = async (
   body: PasswordResetSubmitRequest,
-): Promise<ApiResponse<null>> => {
+): Promise<ApiMessageResponse> => {
   try {
-    return await request<ApiResponse<null>>(
+    return await request<ApiMessageResponse>(
       withBaseUrl('/auth/password/reset'),
       {
         method: 'PATCH',
@@ -64,6 +54,6 @@ export const resetPassword = async (
       },
     );
   } catch (error) {
-    return handleRequestError<ApiResponse<null>>(error);
+    throw normalizeApiError(error);
   }
 };

@@ -1,25 +1,18 @@
 import { withBaseUrl } from '@/services/client';
-import type { ApiResponse } from '@/types/api';
-import { request, type AxiosError } from '@umijs/max';
+import type { ApiMessageResponse } from '@/types/api';
+import { normalizeApiError } from '@/utils/apiError';
+import { request } from '@umijs/max';
 
 type UpdatePasswordPayload = {
   current_password: string;
   password: string;
 };
 
-const handleRequestError = (error: unknown): ApiResponse<null> => {
-  const axiosError = error as AxiosError<ApiResponse<null>>;
-  if (axiosError.response?.data) {
-    return axiosError.response.data;
-  }
-  throw error;
-};
-
 export const updateCurrentUserPassword = async (
   body: UpdatePasswordPayload,
-): Promise<ApiResponse<null>> => {
+): Promise<ApiMessageResponse> => {
   try {
-    return await request<ApiResponse<null>>(
+    return await request<ApiMessageResponse>(
       withBaseUrl('/v1/users/me/password'),
       {
         method: 'PATCH',
@@ -27,6 +20,6 @@ export const updateCurrentUserPassword = async (
       },
     );
   } catch (error) {
-    return handleRequestError(error);
+    throw normalizeApiError(error);
   }
 };

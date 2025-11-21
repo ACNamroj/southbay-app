@@ -44,13 +44,9 @@ export const useAuthToken = () => {
     }
     try {
       const response = await refreshAuthToken(refreshToken);
-      if (response?.success && response?.data) {
-        const mapped = mapApiTokensToStored(response.data);
-        persistStoredAuthTokens(mapped);
-        return mapped;
-      }
-      clearStoredAuthTokens();
-      return undefined;
+      const mapped = mapApiTokensToStored(response);
+      persistStoredAuthTokens(mapped);
+      return mapped;
     } catch (error) {
       clearStoredAuthTokens();
       return undefined;

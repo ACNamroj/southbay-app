@@ -3,6 +3,7 @@ import { useAuthToken } from '@/hooks/auth/useAuthToken';
 import { useSiderCollapse } from '@/hooks/useSiderCollapse';
 import { logout } from '@/services/auth/logoutService';
 import { updateCurrentUserPassword } from '@/services/user/passwordService';
+import { getApiErrorMessage } from '@/utils/apiError';
 import {
   evaluatePasswordPolicy,
   PASSWORD_POLICY_REGEX,
@@ -101,18 +102,19 @@ const UserMenuFooter: React.FC = () => {
         current_password: values.currentPassword,
         password: values.password,
       });
-      if (response?.success) {
-        message.success(response.message ?? 'Contraseña actualizada con éxito');
-        handlePasswordModalClose();
-        return;
-      }
-      message.error(response?.message ?? 'No pudimos actualizar tu contraseña');
+      message.success(response?.message ?? 'Contraseña actualizada con éxito');
+      handlePasswordModalClose();
     } catch (error: any) {
       if (error?.errorFields) {
         return;
       }
       console.error('Update password error:', error);
-      message.error('Ocurrió un error. Por favor intenta nuevamente.');
+      message.error(
+        getApiErrorMessage(
+          error,
+          'No pudimos actualizar tu contraseña. Por favor intenta nuevamente.',
+        ),
+      );
     } finally {
       setIsUpdatingPassword(false);
     }

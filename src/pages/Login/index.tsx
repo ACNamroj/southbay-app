@@ -3,6 +3,7 @@ import { useAuthToken } from '@/hooks/auth/useAuthToken';
 import { useSiderCollapse } from '@/hooks/useSiderCollapse';
 import { login } from '@/services/login/loginService';
 import type { LoginRequest } from '@/types/auth';
+import { getApiErrorMessage } from '@/utils/apiError';
 import { mapApiTokensToStored } from '@/utils/authTokens';
 import { LoginFormPage, ProFormText } from '@ant-design/pro-components';
 import { history, Link, useModel } from '@umijs/max';
@@ -55,19 +56,19 @@ const Login: React.FC = () => {
   const handleFinish = useCallback(
     async (values: LoginRequest) => {
       try {
-        const response = await login(values);
-        if (response?.success && response?.data) {
-          setAuthTokens(mapApiTokensToStored(response.data));
-          await fetchCurrentUser();
-          history.push('/');
-          return true;
-        }
-
-        message.error(response?.message || 'Credenciales inválidas');
-        return false;
+        const tokens = await login(values);
+        setAuthTokens(mapApiTokensToStored(tokens));
+        await fetchCurrentUser();
+        history.push('/');
+        return true;
       } catch (error) {
         console.error('Login error:', error);
-        message.error('Ocurrió un error. Por favor intenta nuevamente');
+        message.error(
+          getApiErrorMessage(
+            error,
+            'Credenciales inválidas. Intenta nuevamente.',
+          ),
+        );
         return false;
       }
     },

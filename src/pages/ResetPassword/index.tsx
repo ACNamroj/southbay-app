@@ -5,6 +5,7 @@ import {
   resetPassword,
   verifyPasswordResetToken,
 } from '@/services/auth/passwordResetService';
+import { getApiErrorMessage } from '@/utils/apiError';
 import {
   evaluatePasswordPolicy,
   PASSWORD_POLICY_REGEX,
@@ -109,23 +110,16 @@ const ResetPassword: React.FC = () => {
         if (!mounted) {
           return;
         }
-        if (response?.success && response.data) {
-          setValidatedToken(urlToken);
-          const expirationDate = ensureBuenosAiresDate(
-            response.data.expires_at,
-          );
-          setExpiresAt(expirationDate);
-          setIsExpired(expirationDate.getTime() <= Date.now());
-        } else {
-          setVerificationError(
-            response?.message ??
-              'No pudimos validar el enlace. Solicita un nuevo correo.',
-          );
-        }
+        setValidatedToken(response.reset_token);
+        const expirationDate = ensureBuenosAiresDate(response.expires_at);
+        setExpiresAt(expirationDate);
+        setIsExpired(expirationDate.getTime() <= Date.now());
       } catch (error) {
-        console.error('Verify reset token error:', error);
         setVerificationError(
-          'Ocurrió un error al validar el enlace. Por favor intenta nuevamente.',
+          getApiErrorMessage(
+            error,
+            'No pudimos validar el enlace. Solicita un nuevo correo.',
+          ),
         );
       } finally {
         if (mounted) {
@@ -190,23 +184,20 @@ const ResetPassword: React.FC = () => {
           password: values.password,
         });
 
-        if (response?.success) {
-          message.success(
-            response.message ??
-              'Tu contraseña fue restablecida correctamente. Inicia sesión con tus nuevas credenciales.',
-          );
-          history.push('/login');
-          return true;
-        }
-
-        message.error(
+        message.success(
           response?.message ??
-            'No pudimos restablecer tu contraseña. Intenta nuevamente.',
+            'Tu contraseña fue restablecida correctamente. Inicia sesión con tus nuevas credenciales.',
         );
-        return false;
+        history.push('/login');
+        return true;
       } catch (error) {
         console.error('Reset password error:', error);
-        message.error('Ocurrió un error. Por favor intenta nuevamente.');
+        message.error(
+          getApiErrorMessage(
+            error,
+            'No pudimos restablecer tu contraseña. Intenta nuevamente.',
+          ),
+        );
         return false;
       }
     },

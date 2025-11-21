@@ -1,6 +1,7 @@
 import { LOGO } from '@/assets';
 import { useSiderCollapse } from '@/hooks/useSiderCollapse';
 import { initiatePasswordReset } from '@/services/auth/passwordResetService';
+import { getApiErrorMessage } from '@/utils/apiError';
 import { LoginFormPage, ProFormText } from '@ant-design/pro-components';
 import { history, Link } from '@umijs/max';
 import { message, theme } from 'antd';
@@ -52,23 +53,19 @@ const ForgotPassword: React.FC = () => {
         origin: 'web',
       });
 
-      if (response?.success) {
-        message.success(
-          response.message ??
-            'Enviamos un correo con las instrucciones para restablecer tu contraseña',
-        );
-        history.push('/login');
-        return true;
-      }
-
-      message.error(
+      message.success(
         response?.message ??
-          'No pudimos procesar la solicitud. Intenta nuevamente',
+          'Enviamos un correo con las instrucciones para restablecer tu contraseña',
       );
-      return false;
+      history.push('/login');
+      return true;
     } catch (error) {
-      console.error('Forgot password error:', error);
-      message.error('Ocurrió un error. Por favor intenta nuevamente');
+      message.error(
+        getApiErrorMessage(
+          error,
+          'No pudimos procesar la solicitud. Intenta nuevamente.',
+        ),
+      );
       return false;
     }
   }, []);

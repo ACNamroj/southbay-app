@@ -1,25 +1,20 @@
 import { withBaseUrl } from '@/services/client';
-import type { ApiResponse } from '@/types/api';
 import type { LoginRequest, LoginTokensResponse } from '@/types/auth';
-import { request, type AxiosError } from '@umijs/max';
+import { getApiErrorMessage, normalizeApiError } from '@/utils/apiError';
+import { request } from '@umijs/max';
 
 export const login = async (
   body: LoginRequest,
-): Promise<ApiResponse<LoginTokensResponse>> => {
+): Promise<LoginTokensResponse> => {
   try {
-    return await request<ApiResponse<LoginTokensResponse>>(
-      withBaseUrl('/auth/login'),
-      {
-        method: 'POST',
-        data: body,
-      },
-    );
+    return await request<LoginTokensResponse>(withBaseUrl('/auth/login'), {
+      method: 'POST',
+      data: body,
+    });
   } catch (error) {
-    const axiosError = error as AxiosError<ApiResponse<LoginTokensResponse>>;
-    const responseData = axiosError.response?.data;
-    if (responseData) {
-      return responseData;
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Login request error:', getApiErrorMessage(error));
     }
-    throw error;
+    throw normalizeApiError(error);
   }
 };

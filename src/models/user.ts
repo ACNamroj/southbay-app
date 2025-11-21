@@ -7,13 +7,9 @@ export default () => {
 
   const fetchCurrentUser = useCallback(async () => {
     try {
-      const response = await getCurrentUser();
-      if (response?.success && response?.data) {
-        setCurrentUser(response.data);
-        return response.data;
-      }
-      setCurrentUser(undefined);
-      return undefined;
+      const user = await getCurrentUser();
+      setCurrentUser(user);
+      return user;
     } catch (error) {
       setCurrentUser(undefined);
       return undefined;

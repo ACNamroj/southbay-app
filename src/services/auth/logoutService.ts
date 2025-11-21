@@ -1,8 +1,13 @@
 import { withBaseUrl } from '@/services/client';
-import type { ApiResponse } from '@/types/api';
+import { normalizeApiError } from '@/utils/apiError';
 import { request } from '@umijs/max';
 
-export const logout = () =>
-  request<ApiResponse<null>>(withBaseUrl('/auth/logout'), {
-    method: 'POST',
-  });
+export const logout = async () => {
+  try {
+    await request<void>(withBaseUrl('/auth/logout'), {
+      method: 'POST',
+    });
+  } catch (error) {
+    throw normalizeApiError(error);
+  }
+};

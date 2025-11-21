@@ -1,15 +1,19 @@
 import { withBaseUrl } from '@/services/client';
-import type { ApiResponse } from '@/types/api';
 import type { LoginTokensResponse } from '@/types/auth';
+import { normalizeApiError } from '@/utils/apiError';
 import { getRequestInstance } from '@umijs/max';
 
-export const refreshAuthToken = (
+export const refreshAuthToken = async (
   refreshToken: string,
-): Promise<ApiResponse<LoginTokensResponse>> =>
-  getRequestInstance()
-    .post<ApiResponse<LoginTokensResponse>>(
+): Promise<LoginTokensResponse> => {
+  try {
+    const response = await getRequestInstance().post<LoginTokensResponse>(
       withBaseUrl('/auth/refresh'),
       { refresh_token: refreshToken },
-      { skipAuthRefresh: true },
-    )
-    .then((response) => response.data);
+      { skipAuthRefresh: true } as any,
+    );
+    return response.data;
+  } catch (error) {
+    throw normalizeApiError(error);
+  }
+};
