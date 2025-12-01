@@ -50,7 +50,6 @@ const ForgotPassword: React.FC = () => {
     try {
       const response = await initiatePasswordReset({
         email: values.email,
-        origin: 'web',
       });
 
       message.success(
