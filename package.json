@@ -1,6 +1,5 @@
 {
   "private": true,
-  "license": "MIT",
   "author": "Jorman Espinoza <j.espinoza.torrealba@accenture.com>",
   "scripts": {
     "build": "max build",
