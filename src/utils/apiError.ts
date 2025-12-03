@@ -3,11 +3,17 @@ import type { AxiosError } from '@umijs/max';
 
 const DEFAULT_ERROR_MESSAGE = 'Ocurrió un error. Por favor intenta nuevamente.';
 
+const deriveStatusCode = (error: AxiosError<ApiErrorResponse>) =>
+  error?.response?.status ?? error?.response?.data?.statusCode;
+
 export const normalizeApiError = (error: unknown): ApiErrorResponse => {
   const axiosError = error as AxiosError<ApiErrorResponse>;
   const payload = axiosError?.response?.data;
   if (payload?.message || payload?.messages) {
-    return payload;
+    return {
+      ...payload,
+      statusCode: payload.statusCode ?? deriveStatusCode(axiosError),
+    };
   }
 
   const asApiError = error as ApiErrorResponse;

@@ -1,20 +1,21 @@
-import { withBaseUrl } from '@/services/client';
+import { apiRequest } from '@/services/client';
 import type { LoginRequest, LoginTokensResponse } from '@/types/auth';
-import { getApiErrorMessage, normalizeApiError } from '@/utils/apiError';
-import { request } from '@umijs/max';
+import { getApiErrorMessage } from '@/utils/apiError';
 
 export const login = async (
   body: LoginRequest,
 ): Promise<LoginTokensResponse> => {
   try {
-    return await request<LoginTokensResponse>(withBaseUrl('/auth/login'), {
+    return await apiRequest<LoginTokensResponse>('/auth/login', {
       method: 'POST',
       data: body,
+      retry: { retries: 0, retryOnNetworkError: true },
+      useGlobalErrorHandler: false,
     });
   } catch (error) {
     if (process.env.NODE_ENV !== 'production') {
       console.error('Login request error:', getApiErrorMessage(error));
     }
-    throw normalizeApiError(error);
+    throw error;
   }
 };

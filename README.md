@@ -55,9 +55,15 @@ Defined in `package.json`:
 - `dev`: Run the Umi dev server (`max dev`).
 - `start`: Alias for `dev`.
 - `build`: Build the app for production (`max build`).
+- `lint`: Prettier check (`pnpm format --cache --check`).
+- `typecheck`: TypeScript `tsc --noEmit`.
+- `lint-staged`: Run staged-file formatting (used by Husky pre-commit).
 - `setup` / `postinstall`: Run Umi setup tasks (`max setup`). Executed on install and can be invoked manually.
 - `prepare`: Initialize Husky git hooks (`husky`).
 - `format`: Run Prettier across the repository.
+- `test`: Run Vitest in CI mode.
+- `test:watch`: Vitest watch.
+- `test:coverage`: Vitest with coverage output.
 
 Run with pnpm, for example: `pnpm dev`, `pnpm build`, `pnpm format`.
 
@@ -66,7 +72,8 @@ Run with pnpm, for example: `pnpm dev`, `pnpm build`, `pnpm format`.
 - `BASE_URL`: Base URL for backend API requests.
   - Used in `src/services/client.ts`.
   - In development it is defined via Umi config: `.umirc.ts -> define: { 'process.env.BASE_URL': 'http://localhost:8080' }`.
-  - For other environments, set a value at build time using Umi's `define` config or environment injection. TODO: Document the team-standard approach for staging/production builds (e.g., multiple config files, environment-specific pipelines, or runtime config mechanism if used).
+  - For other environments, set a value at build time using Umi's `define` config or environment injection. Add an environment-specific define in `.umirc.*.ts` or inject via CI pipelines.
+  - `.env.example` shows expected keys; create `.env.local` (not committed) for local overrides and ensure CI/CD sets `BASE_URL` for staging/production.
 
 Other common variables:
 
@@ -118,19 +125,25 @@ During development, Umi serves mock routes from the `mock/` directory. This allo
 
 ## Testing
 
-No test runner is currently configured in `package.json` and no test files were found in the repository.
+Vitest + React Testing Library are configured. Run locally:
 
-TODO:
-
-- Choose a test framework (e.g., Vitest/Jest + React Testing Library) and add scripts like `test`, `test:watch`, and `coverage`.
-- Document how to run tests locally and in CI.
+- `pnpm test` – run once in CI mode.
+- `pnpm test:watch` – watch mode.
+- `pnpm test:coverage` – run with coverage output.
 
 ## Linting and Formatting
 
 - Prettier is configured via scripts: `pnpm format` to format the codebase.
 - `prettier-plugin-organize-imports` and `prettier-plugin-packagejson` are included.
-- `lint-staged` is present as a dev dependency; TODO: Add/confirm `.lintstagedrc` (or package.json config) if pre-commit formatting is desired.
-- Husky (`prepare` script) is included to enable Git hooks; TODO: Ensure hooks are installed (`pnpm husky install`) and any desired hooks are created.
+- `lint-staged` is configured in `lint-staged.config.js` and runs via Husky pre-commit (`.husky/pre-commit`).
+- Husky (`prepare` script) is included to enable Git hooks; ensure hooks are installed with `pnpm husky install` after cloning.
+
+## Design System
+
+- Theme tokens live in `src/theme/tokens.ts` (JS) and `src/theme/variables.less` (CSS variables). Ant Design pulls from `antdThemeTokens` in `.umirc.ts`; styles use CSS variables via `src/global.less`.
+- Spacing scale: `--space-xxs` (4px) to `--space-xl` (32px). Typography scale: base 16px with heading sizes (`--heading-1-size` 32px, `--heading-2-size` 24px, etc.).
+- Use `var(--primary-color)`, `var(--text-color)`, and spacing/typography tokens for buttons/forms/tables to avoid ad-hoc values.
+- Shared components belong under `src/components/`; add Storybook (optional) if you want interactive docs for those components.
 
 ## Deployment
 

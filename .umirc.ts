@@ -1,18 +1,12 @@
 import { defineConfig } from '@umijs/max';
+import { antdThemeTokens } from './src/theme/tokens';
 
 export default defineConfig({
   antd: {
     dark: false,
     compact: false,
     theme: {
-      token: {
-        colorPrimary: '#FF5200',
-        colorBgBase: '#FFFFFF',
-        colorBorder: '#D9D9D9',
-        colorLink: '#0449DD',
-        colorText: '#000000',
-        borderRadius: 8,
-      },
+      token: antdThemeTokens,
     },
   },
   access: {},

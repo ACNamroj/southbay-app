@@ -1,5 +1,6 @@
 import { useAuthToken } from '@/hooks/auth/useAuthToken';
 import { history, Outlet, useModel } from '@umijs/max';
+import { Spin } from 'antd';
 import React, { useEffect, useState } from 'react';
 
 const AuthWrapper: React.FC = () => {
@@ -10,6 +11,15 @@ const AuthWrapper: React.FC = () => {
 
   useEffect(() => {
     let cancelled = false;
+    const redirectToLogin = () => {
+      if (cancelled) {
+        return;
+      }
+      removeAuthTokens();
+      clearCurrentUser();
+      history.replace('/login');
+    };
+
     const ensureAuth = async () => {
       let hasValidToken = isAuthTokenValid();
       if (!hasValidToken) {
@@ -17,15 +27,15 @@ const AuthWrapper: React.FC = () => {
         hasValidToken = Boolean(refreshed?.token);
       }
       if (!hasValidToken) {
-        removeAuthTokens();
-        clearCurrentUser();
-        if (!cancelled) {
-          history.replace('/login');
-        }
+        redirectToLogin();
         return;
       }
       if (!currentUser) {
-        await fetchCurrentUser();
+        const user = await fetchCurrentUser();
+        if (!user) {
+          redirectToLogin();
+          return;
+        }
       }
       if (!cancelled) {
         setIsReady(true);
@@ -47,7 +57,18 @@ const AuthWrapper: React.FC = () => {
   ]);
 
   if (!isReady) {
-    return null;
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Spin size="large" tip="Cargando sesión..." />
+      </div>
+    );
   }
 
   return <Outlet />;

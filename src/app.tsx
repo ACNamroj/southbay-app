@@ -2,6 +2,8 @@
 
 // Global initial data configuration, used for initializing user info and permissions in the Layout
 // For more information, see the documentation: https://umijs.org/docs/api/runtime-config#getinitialstate
+import ErrorBoundary from '@/components/ErrorBoundary';
+import OfflineNotice from '@/components/OfflineNotice';
 import Logo from '@/layout/components/Logo';
 import UserMenuFooter from '@/layout/components/UserMenuFooter';
 import { normalizeMenuItems } from '@/layout/menu/utils';
@@ -140,6 +142,12 @@ export const layout: RunTimeLayoutConfig = ({
     return content;
   },
   menuFooterRender: () => <UserMenuFooter />,
+  childrenRender: (children) => (
+    <ErrorBoundary>
+      <OfflineNotice />
+      {children}
+    </ErrorBoundary>
+  ),
 });
 
 export const request: RequestConfig = createRequestConfig();

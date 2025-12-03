@@ -3,6 +3,7 @@ import type { LoginTokensResponse, StoredAuthTokens } from '@/types/auth';
 const AUTH_STORAGE_KEY = 'southbay:auth';
 const REFRESH_COOKIE_NAME = 'southbay_refresh_token';
 const REFRESH_COOKIE_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
+const ACCESS_TOKEN_EXPIRY_LEEWAY_SECONDS = 30;
 
 const isBrowser = () => typeof window !== 'undefined';
 
@@ -16,15 +17,26 @@ const readCookie = (name: string) => {
   return match ? decodeURIComponent(match[1]) : undefined;
 };
 
+const isSecureContextAvailable = () => {
+  if (!isBrowser()) {
+    return false;
+  }
+  if (typeof window.isSecureContext === 'boolean') {
+    return window.isSecureContext;
+  }
+  return window.location.protocol === 'https:';
+};
+
 const setCookie = (name: string, value: string, maxAgeSeconds?: number) => {
   if (!isBrowser()) {
     return;
   }
   const maxAge =
     typeof maxAgeSeconds === 'number' ? `;max-age=${maxAgeSeconds}` : '';
+  const secure = isSecureContextAvailable() ? ';Secure' : '';
   document.cookie = `${name}=${encodeURIComponent(
     value,
-  )};path=/${maxAge};SameSite=Strict`;
+  )};path=/${maxAge};SameSite=Strict${secure}`;
 };
 
 const deleteCookie = (name: string) => {
@@ -57,11 +69,12 @@ export const persistStoredAuthTokens = (payload?: StoredAuthTokens) => {
     deleteCookie(REFRESH_COOKIE_NAME);
     return;
   }
-  window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(payload));
-  if (payload.refreshToken) {
+  const { refreshToken, ...rest } = payload;
+  window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(rest));
+  if (refreshToken) {
     setCookie(
       REFRESH_COOKIE_NAME,
-      payload.refreshToken,
+      refreshToken,
       REFRESH_COOKIE_MAX_AGE_SECONDS,
     );
   }
@@ -124,16 +137,20 @@ export const decodeJwtToken = (token: string) => {
 
 export const isStoredAccessTokenValid = () => {
   const tokens = readStoredAuthTokens();
-  if (!tokens?.token) return false;
+  if (!tokens?.token) {
+    return false;
+  }
   const decoded = decodeJwtToken(tokens.token);
   const expiresFromToken = decoded?.exp;
   const expiresFromField = tokens.expiresAt
     ? Math.floor(new Date(tokens.expiresAt).getTime() / 1000)
     : undefined;
   const expiresAt = expiresFromToken ?? expiresFromField;
-  if (!expiresAt) return true;
+  if (!expiresAt) {
+    return true;
+  }
   const now = Date.now() / 1000;
-  return expiresAt > now;
+  return expiresAt - ACCESS_TOKEN_EXPIRY_LEEWAY_SECONDS > now;
 };
 
 export const getStoredAuthorizationHeader = () => {

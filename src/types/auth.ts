@@ -12,7 +12,7 @@ export type LoginTokensResponse = {
 
 export type StoredAuthTokens = {
   token: string;
-  refreshToken: string;
+  refreshToken?: string;
   expiresAt: string;
   tokenType: string;
 };

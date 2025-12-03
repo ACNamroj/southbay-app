@@ -1,5 +1,6 @@
 import { refreshAuthToken } from '@/services/auth/tokenService';
 import type { StoredAuthTokens } from '@/types/auth';
+import { getApiErrorMessage, normalizeApiError } from '@/utils/apiError';
 import {
   clearStoredAuthTokens,
   getStoredAuthorizationHeader,
@@ -16,6 +17,7 @@ import {
   type AxiosError,
   type AxiosRequestConfig,
 } from '@umijs/max';
+import { message } from 'antd';
 
 const AUTH_EXCLUDED_PATHS = [
   '/auth/login',
@@ -24,6 +26,11 @@ const AUTH_EXCLUDED_PATHS = [
   '/auth/password/reset/verify-token',
   '/auth/password/reset',
 ];
+
+type AuthAxiosRequestConfig = AxiosRequestConfig & {
+  skipAuthRefresh?: boolean;
+  _retry?: boolean;
+};
 
 const isAuthRequest = (url?: string) => {
   if (!url) {
@@ -43,9 +50,12 @@ const applyAuthorizationHeader = (
   config: AxiosRequestConfig,
   token: string,
 ) => {
-  if (config?.headers) {
-    config.headers.Authorization = token;
-  }
+  const existingHeaders =
+    (config.headers as Record<string, string> | undefined) ?? {};
+  config.headers = {
+    ...existingHeaders,
+    Authorization: token,
+  };
 };
 
 const resolveRefreshToken = () =>
@@ -85,7 +95,9 @@ const queueTokenRefresh = () => {
   return refreshPromise;
 };
 
-export const authRequestInterceptor = async (config: AxiosRequestConfig) => {
+export const authRequestInterceptor = async (
+  config: AuthAxiosRequestConfig,
+) => {
   if (
     typeof window === 'undefined' ||
     config.skipAuthRefresh ||
@@ -97,6 +109,7 @@ export const authRequestInterceptor = async (config: AxiosRequestConfig) => {
     const refreshed = await queueTokenRefresh();
     if (!refreshed?.token) {
       handleUnauthorized();
+      config.skipAuthRefresh = true;
       return config;
     }
   }
@@ -109,24 +122,25 @@ export const authRequestInterceptor = async (config: AxiosRequestConfig) => {
 
 export const authResponseErrorInterceptor = async (error: AxiosError) => {
   const { response, config } = error;
+  const typedConfig = config as AuthAxiosRequestConfig | undefined;
 
   if (
     typeof window !== 'undefined' &&
     response?.status === 401 &&
-    config &&
-    !config.skipAuthRefresh &&
-    !config._retry &&
-    !isAuthRequest(config.url)
+    typedConfig &&
+    !typedConfig.skipAuthRefresh &&
+    !typedConfig._retry &&
+    !isAuthRequest(typedConfig.url)
   ) {
     const refreshed = await queueTokenRefresh();
     if (refreshed?.token) {
-      config._retry = true;
-      config.skipAuthRefresh = true;
+      typedConfig._retry = true;
+      typedConfig.skipAuthRefresh = true;
       applyAuthorizationHeader(
-        config,
+        typedConfig,
         `${refreshed.tokenType || 'Bearer'} ${refreshed.token}`,
       );
-      return getRequestInstance().request(config);
+      return getRequestInstance().request(typedConfig);
     }
     handleUnauthorized();
   }
@@ -142,4 +156,17 @@ export const createRequestConfig = (): RequestConfig => ({
       (error: AxiosError) => authResponseErrorInterceptor(error),
     ] as any,
   ],
+  errorConfig: {
+    errorHandler: (error: AxiosError) => {
+      const config = error.config as AuthAxiosRequestConfig | undefined;
+      if (config?.skipErrorHandler) {
+        throw error;
+      }
+      const normalized = normalizeApiError(error);
+      if (typeof window !== 'undefined') {
+        message.error(getApiErrorMessage(normalized));
+      }
+      throw normalized;
+    },
+  },
 });
