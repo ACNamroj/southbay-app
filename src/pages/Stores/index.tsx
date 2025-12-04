@@ -1,6 +1,7 @@
 import type { Store, StorePayload, StoreStatus } from '@/types/store';
 import {
   DeleteOutlined,
+  DownloadOutlined,
   EditOutlined,
   ExclamationCircleOutlined,
   PlusOutlined,
@@ -44,10 +45,18 @@ const Stores: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalSubmitting, setModalSubmitting] = useState(false);
   const [editingStore, setEditingStore] = useState<Store | null>(null);
+  const [exportLoading, setExportLoading] = useState(false);
   const searchRef = useRef('');
   const actionRef = useRef<ActionType>();
-  const { loadStores, create, update, remove, loading, pagination } =
-    useModel('stores');
+  const {
+    loadStores,
+    create,
+    update,
+    remove,
+    loading,
+    pagination,
+    exportStores,
+  } = useModel('stores');
 
   const openCreateModal = () => {
     setEditingStore(null);
@@ -113,6 +122,27 @@ const Stores: React.FC = () => {
     });
   };
 
+  const handleExport = async () => {
+    try {
+      setExportLoading(true);
+      const { blob, filename } = await exportStores();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename || 'stores.xlsx';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      message.success('Listado descargado');
+    } catch (error: any) {
+      // Surface the actual reason captured by downloadStores (e.g., backend message)
+      message.error(error?.message || 'No se pudo descargar el listado');
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
   const handleSearch = (value: string) => {
     const nextValue = value.trim();
     searchRef.current = nextValue;
@@ -170,6 +200,16 @@ const Stores: React.FC = () => {
         title: 'Gestión de Tiendas',
         extra: [
           <Button
+            key="download"
+            icon={<DownloadOutlined />}
+            loading={exportLoading}
+            onClick={handleExport}
+            shape="default"
+            type="default"
+            aria-label="Descargar listado de tiendas"
+            title="Descargar listado de tiendas"
+          />,
+          <Button
             key="upload"
             icon={<UploadOutlined />}
             onClick={() =>
@@ -207,7 +247,7 @@ const Stores: React.FC = () => {
           request={async (params) => {
             const result = await loadStores({
               page: params.current,
-              page_size: params.pageSize,
+              size: params.pageSize,
               name: searchRef.current,
             });
             return {

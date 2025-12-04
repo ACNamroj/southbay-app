@@ -1,6 +1,7 @@
 import {
   createStore,
   deleteStore,
+  downloadStores,
   fetchStores,
   updateStore,
 } from '@/services/stores/storeService';
@@ -30,7 +31,11 @@ const useStoresModel = () => {
       try {
         const query: StoreListParams = {
           page: params.page ?? pagination.current,
-          page_size: params.page_size ?? pagination.pageSize,
+          size:
+            params.size ??
+            params.page_size ??
+            params.pageSize ??
+            pagination.pageSize,
           name: params.name ?? lastQueryRef.current.name,
           search: params.search ?? lastQueryRef.current.search,
           status: params.status ?? lastQueryRef.current.status,
@@ -40,7 +45,11 @@ const useStoresModel = () => {
         setStores(result.data);
         setPagination({
           current: result.page,
-          pageSize: result.page_size || DEFAULT_PAGE_SIZE,
+          pageSize:
+            result.page_size ??
+            result.size ??
+            pagination.pageSize ??
+            DEFAULT_PAGE_SIZE,
           total: result.total,
         });
         lastQueryRef.current = query;
@@ -64,6 +73,10 @@ const useStoresModel = () => {
     return deleteStore(id);
   }, []);
 
+  const exportStores = useCallback(async () => {
+    return downloadStores();
+  }, []);
+
   return {
     stores,
     loading,
@@ -72,6 +85,7 @@ const useStoresModel = () => {
     create,
     update,
     remove,
+    exportStores,
   };
 };
 

@@ -1,4 +1,4 @@
-import { apiRequest } from '@/services/client';
+import { apiRequest, withBaseUrl } from '@/services/client';
 import type {
   Store,
   StoreListParams,
@@ -6,16 +6,18 @@ import type {
   StorePayload,
   StoreStatus,
 } from '@/types/store';
+import { getApiErrorMessage } from '@/utils/apiError';
+import { getRequestInstance, type AxiosError } from '@umijs/max';
 
 type StoreListApiResponse =
   | Store[]
   | {
       data?: Store[];
-      page?: number;
-      page_size?: number;
-      total?: number;
+      page: number;
+      size: number;
+      total: number;
       total_pages?: number;
-      last?: boolean;
+      last: boolean;
     };
 
 const mapStoreListResponse = (
@@ -23,13 +25,13 @@ const mapStoreListResponse = (
   params: StoreListParams,
 ): StoreListResult => {
   if (Array.isArray(response)) {
-    const fallbackSize =
-      (params.page_size ?? params.pageSize ?? response.length) || 10;
+    const fallbackSize = (params.size ?? response.length) || 10;
     return {
       data: response,
       total: response.length,
-      page: params.page ?? params.pageNumber ?? 1,
+      page: params.page ?? 1,
       page_size: fallbackSize,
+      size: fallbackSize,
     };
   }
 
@@ -41,18 +43,13 @@ const mapStoreListResponse = (
       ? Math.max(params.pageNumber - 1, 0)
       : 0;
   const pageZeroBased = response.page ?? inputPageZeroBased;
-  const page_size =
-    (response.page_size ??
-      params.page_size ??
-      params.pageSize ??
-      list.length) ||
-    10;
+  const size = (response.size ?? params.size ?? list.length) || 10;
 
   return {
     data: list,
     total: response.total ?? list.length,
     page: pageZeroBased + 1,
-    page_size,
+    page_size: size,
     total_pages: response.total_pages,
     last: response.last,
   };
@@ -75,14 +72,20 @@ export const fetchStores = async (
       ? Math.max(params.pageNumber - 1, 0)
       : 0;
 
+  const nameParam = params.name ?? params.search;
+
+  const requestParams: Record<string, unknown> = {
+    page: pageZeroBased,
+    size: params.size,
+    status: normalizeStatusParam(params.status),
+  };
+
+  if (nameParam && nameParam.trim() !== '') {
+    requestParams.name = nameParam;
+  }
+
   const response = await apiRequest<StoreListApiResponse>('/v1/stores', {
-    params: {
-      page: pageZeroBased,
-      size: params.page_size ?? params.pageSize,
-      page_size: params.page_size ?? params.pageSize,
-      name: params.name ?? params.search,
-      status: normalizeStatusParam(params.status),
-    },
+    params: requestParams,
     retry: { retries: 1 },
   });
 
@@ -114,4 +117,57 @@ export const deleteStore = async (id: number): Promise<Store> => {
     data: { status: 'DELETED' },
     retry: { retries: 0 },
   });
+};
+
+export const downloadStores = async (): Promise<{
+  blob: Blob;
+  filename: string;
+}> => {
+  try {
+    const client = getRequestInstance();
+    const response = await client.request<Blob>({
+      url: withBaseUrl('/v1/stores/export'),
+      method: 'GET',
+      responseType: 'blob',
+    });
+    const disposition: string | undefined =
+      (response.headers?.['content-disposition'] as string | undefined) ??
+      (response.headers as Record<string, string> | undefined)?.[
+        'Content-Disposition'
+      ];
+    const filenameMatch = disposition?.match(
+      /filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i,
+    );
+    const rawFilename =
+      (filenameMatch?.[1] || filenameMatch?.[2]) ?? 'stores.xlsx';
+    let filename = rawFilename;
+    try {
+      filename = decodeURIComponent(rawFilename);
+    } catch (_e) {
+      // keep raw filename if decode fails
+    }
+
+    const blob: Blob = response.data;
+    return { blob, filename };
+  } catch (error) {
+    const axiosError = error as AxiosError;
+    const responseData = axiosError.response?.data;
+    if (responseData instanceof Blob) {
+      try {
+        const text = await responseData.text();
+        const parsed = JSON.parse(text);
+        const message =
+          parsed?.message ??
+          (Array.isArray(parsed?.messages)
+            ? parsed.messages.join(', ')
+            : undefined);
+        if (message) {
+          throw new Error(message);
+        }
+      } catch (_err) {
+        // fall through to the generic handler
+      }
+    }
+    throw new Error(getApiErrorMessage(error));
+  }
 };

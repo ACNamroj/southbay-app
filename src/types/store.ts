@@ -11,8 +11,12 @@ export type Store = {
 
 export type StoreListParams = {
   page?: number;
+  pageNumber?: number;
   size?: number;
+  pageSize?: number;
+  page_size?: number;
   name?: string;
+  search?: string;
   status?: StoreStatus | StoreStatus[];
 };
 
@@ -21,6 +25,7 @@ export type StoreListResult = {
   total: number;
   page: number;
   page_size: number;
+  size?: number;
   total_pages?: number;
   last?: boolean;
 };
