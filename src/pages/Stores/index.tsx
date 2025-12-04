@@ -281,7 +281,7 @@ const Stores: React.FC = () => {
         onCancel={closeModal}
         onOk={handleSubmit}
         confirmLoading={modalSubmitting}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={form} layout="vertical" preserve={false}>
           <Form.Item
