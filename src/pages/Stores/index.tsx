@@ -291,7 +291,7 @@ const Stores: React.FC = () => {
               { required: true, message: 'Ingresa el nombre de la tienda' },
             ]}
           >
-            <Input placeholder="Ej: Nike.com.ar" />
+            <Input placeholder="nike.com.ar" />
           </Form.Item>
           <Form.Item
             name="external_id"
