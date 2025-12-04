@@ -1,4 +1,4 @@
-import { apiRequest, withBaseUrl } from '@/services/client';
+import { apiRequest } from '@/services/client';
 import type {
   Store,
   StoreListParams,
@@ -7,7 +7,6 @@ import type {
   StoreStatus,
 } from '@/types/store';
 import { getApiErrorMessage } from '@/utils/apiError';
-import { getRequestInstance, type AxiosError } from '@umijs/max';
 
 type StoreListApiResponse =
   | Store[]
@@ -111,10 +110,9 @@ export const updateStore = async (
   });
 };
 
-export const deleteStore = async (id: number): Promise<Store> => {
-  return apiRequest<Store>(`/v1/stores/${id}`, {
-    method: 'PATCH',
-    data: { status: 'DELETED' },
+export const deleteStore = async (id: number): Promise<void> => {
+  return apiRequest<void>(`/v1/stores/${id}`, {
+    method: 'DELETE',
     retry: { retries: 0 },
   });
 };
@@ -124,17 +122,20 @@ export const downloadStores = async (): Promise<{
   filename: string;
 }> => {
   try {
-    const client = getRequestInstance();
-    const response = await client.request<Blob>({
-      url: withBaseUrl('/v1/stores/export'),
+    const response = await apiRequest<any>('/v1/stores/export', {
       method: 'GET',
       responseType: 'blob',
+      getResponse: true,
+      retry: { retries: 0 },
+      useGlobalErrorHandler: false,
     });
+
     const disposition: string | undefined =
-      (response.headers?.['content-disposition'] as string | undefined) ??
+      (response.headers?.['content-disposition'] as string | undefined) ||
       (response.headers as Record<string, string> | undefined)?.[
         'Content-Disposition'
       ];
+
     const filenameMatch = disposition?.match(
       /filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i,
     );
@@ -150,24 +151,7 @@ export const downloadStores = async (): Promise<{
     const blob: Blob = response.data;
     return { blob, filename };
   } catch (error) {
-    const axiosError = error as AxiosError;
-    const responseData = axiosError.response?.data;
-    if (responseData instanceof Blob) {
-      try {
-        const text = await responseData.text();
-        const parsed = JSON.parse(text);
-        const message =
-          parsed?.message ??
-          (Array.isArray(parsed?.messages)
-            ? parsed.messages.join(', ')
-            : undefined);
-        if (message) {
-          throw new Error(message);
-        }
-      } catch (_err) {
-        // fall through to the generic handler
-      }
-    }
+    // Use global api error message normalization
     throw new Error(getApiErrorMessage(error));
   }
 };
