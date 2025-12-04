@@ -103,9 +103,9 @@ export const updateStore = async (
   id: number,
   payload: StorePayload,
 ): Promise<Store> => {
-  return apiRequest<Store>(`/v1/stores/${id}`, {
-    method: 'PATCH',
-    data: payload,
+  return apiRequest<Store>(`/v1/stores`, {
+    method: 'PUT',
+    data: { id, ...payload },
     retry: { retries: 0 },
   });
 };
