@@ -1,4 +1,5 @@
 import type { Store, StorePayload, StoreStatus } from '@/types/store';
+import { validateStoresUploadFile } from '@/utils/xlsxValidation';
 import {
   DeleteOutlined,
   DownloadOutlined,
@@ -24,9 +25,12 @@ import {
   Space,
   Tag,
   Typography,
+  Upload,
   message,
+  type UploadFile,
 } from 'antd';
 import React, { useRef, useState } from 'react';
+import * as XLSX from 'xlsx';
 
 const STATUS_COLOR_MAP: Record<StoreStatus, string> = {
   ACTIVE: 'green',
@@ -46,6 +50,9 @@ const Stores: React.FC = () => {
   const [modalSubmitting, setModalSubmitting] = useState(false);
   const [editingStore, setEditingStore] = useState<Store | null>(null);
   const [exportLoading, setExportLoading] = useState(false);
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [fileList, setFileList] = useState<File[]>([]);
   const searchRef = useRef('');
   const actionRef = useRef<ActionType>();
   const {
@@ -56,6 +63,7 @@ const Stores: React.FC = () => {
     loading,
     pagination,
     exportStores,
+    upload,
   } = useModel('stores');
 
   const openCreateModal = () => {
@@ -99,6 +107,43 @@ const Stores: React.FC = () => {
     } finally {
       setModalSubmitting(false);
     }
+  };
+
+  const openUploadModal = () => {
+    setFileList([]);
+    setUploadModalOpen(true);
+  };
+
+  const closeUploadModal = () => {
+    setUploadModalOpen(false);
+    setFileList([]);
+  };
+
+  const handleUpload = async () => {
+    if (!fileList[0]) {
+      message.warning('Selecciona un archivo .xlsx');
+      return;
+    }
+    try {
+      setUploading(true);
+      await upload(fileList[0]);
+      message.success(
+        'Archivo recibido. Recibirás el reporte por correo cuando finalice el procesamiento.',
+      );
+      closeUploadModal();
+    } catch (_e) {
+      // handled by global api handler
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDownloadTemplate = () => {
+    const data = [['Nombre', 'ID Externo', 'Estado']];
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Tiendas');
+    XLSX.writeFile(wb, 'stores-upload.xlsx');
   };
 
   const confirmDelete = (store: Store) => {
@@ -148,6 +193,13 @@ const Stores: React.FC = () => {
     searchRef.current = nextValue;
     actionRef.current?.reload();
   };
+
+  // Map our selected File[] into Upload's expected list to keep UI in sync
+  const uploadUiFileList: UploadFile[] = fileList.map((f, idx) => ({
+    uid: String(idx),
+    name: f.name,
+    status: 'done',
+  }));
 
   const columns: ProColumns<Store>[] = [
     {
@@ -212,11 +264,7 @@ const Stores: React.FC = () => {
           <Button
             key="upload"
             icon={<UploadOutlined />}
-            onClick={() =>
-              message.info(
-                'La carga masiva de tiendas estará disponible pronto.',
-              )
-            }
+            onClick={openUploadModal}
           >
             Cargar listado
           </Button>,
@@ -272,6 +320,75 @@ const Stores: React.FC = () => {
           }}
         />
       </Card>
+
+      <Modal
+        title="Cargar listado de tiendas (.xlsx)"
+        open={uploadModalOpen}
+        onCancel={closeUploadModal}
+        onOk={handleUpload}
+        okText="Enviar"
+        cancelText="Cancelar"
+        confirmLoading={uploading}
+        destroyOnClose
+      >
+        <div style={{ marginBottom: 12 }}>
+          <div>
+            Selecciona un archivo Excel (.xlsx) con las columnas obligatorias:
+          </div>
+          <ul style={{ marginTop: 6, paddingLeft: 18 }}>
+            <li>
+              <strong>Nombre</strong>
+            </li>
+            <li>
+              <strong>ID Externo</strong>
+            </li>
+            <li>
+              <strong>Estado</strong>
+            </li>
+          </ul>
+          <Typography.Paragraph style={{ marginTop: 4 }}>
+            Debe contener al menos una fila de datos.
+          </Typography.Paragraph>
+          <Button
+            type="link"
+            icon={<DownloadOutlined />}
+            onClick={handleDownloadTemplate}
+            style={{ paddingLeft: 0 }}
+          >
+            Descargar plantilla (.xlsx)
+          </Button>
+        </div>
+        <Upload.Dragger
+          multiple={false}
+          maxCount={1}
+          accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          beforeUpload={async (file) => {
+            try {
+              await validateStoresUploadFile(file as File);
+              setFileList([file as File]);
+              message.success('Archivo válido listo para subir');
+            } catch (err: any) {
+              setFileList([]);
+              message.error(String(err?.message ?? err ?? 'Archivo inválido'));
+            }
+            // Prevent automatic upload, we handle it on modal OK
+            return false;
+          }}
+          onRemove={() => {
+            setFileList([]);
+            return true;
+          }}
+          fileList={uploadUiFileList}
+        >
+          <p className="ant-upload-drag-icon">
+            <UploadOutlined />
+          </p>
+          <p className="ant-upload-text">
+            Haz clic o arrastra el archivo a esta área para seleccionar
+          </p>
+          <p className="ant-upload-hint">Solo se admite un archivo .xlsx</p>
+        </Upload.Dragger>
+      </Modal>
 
       <Modal
         title={editingStore ? 'Editar tienda' : 'Agregar tienda'}

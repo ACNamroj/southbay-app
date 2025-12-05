@@ -4,6 +4,7 @@ import {
   downloadStores,
   fetchStores,
   updateStore,
+  uploadStoresFile,
 } from '@/services/stores/storeService';
 import type {
   Store,
@@ -77,6 +78,10 @@ const useStoresModel = () => {
     return downloadStores();
   }, []);
 
+  const upload = useCallback(async (file: File) => {
+    return uploadStoresFile(file);
+  }, []);
+
   return {
     stores,
     loading,
@@ -86,6 +91,7 @@ const useStoresModel = () => {
     update,
     remove,
     exportStores,
+    upload,
   };
 };
 

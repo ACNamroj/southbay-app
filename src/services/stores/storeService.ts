@@ -155,3 +155,29 @@ export const downloadStores = async (): Promise<{
     throw new Error(getApiErrorMessage(error));
   }
 };
+
+// Upload an XLSX file to create stores in bulk.
+// Backend expects: multipart/form-data with a single part named "file" (xlsx only).
+// It will process asynchronously and send a report via email to the current user.
+export const uploadStoresFile = async (
+  file: File,
+): Promise<{ jobId?: string; message?: string }> => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  // Do not set Content-Type header manually; the browser will add boundary.
+  const response = await apiRequest<any>('/v1/stores/upload', {
+    method: 'POST',
+    data: formData,
+    requestType: undefined,
+    // In case backend responds with 202 or 200, we don't need retries
+    retry: { retries: 0 },
+    useGlobalErrorHandler: true,
+  });
+
+  if (response && typeof response === 'object') {
+    const { jobId, message } = response as { jobId?: string; message?: string };
+    return { jobId, message };
+  }
+  return {};
+};
