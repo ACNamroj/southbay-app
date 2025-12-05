@@ -1,4 +1,9 @@
-import type { Store, StorePayload, StoreStatus } from '@/types/store';
+import {
+  STORE_STATUS,
+  STORE_STATUS_COLORS,
+  STORE_STATUS_LABELS,
+} from '@/constants';
+import type { Store, StorePayload } from '@/types/store';
 import { validateStoresUploadFile } from '@/utils/xlsxValidation';
 import {
   DeleteOutlined,
@@ -32,18 +37,6 @@ import {
 import React, { useRef, useState } from 'react';
 import * as XLSX from 'xlsx';
 
-const STATUS_COLOR_MAP: Record<StoreStatus, string> = {
-  ACTIVE: 'green',
-  INACTIVE: 'orange',
-  DELETED: 'red',
-};
-
-const STATUS_LABELS: Record<StoreStatus, string> = {
-  ACTIVE: 'Activa',
-  INACTIVE: 'Inactiva',
-  DELETED: 'Eliminada',
-};
-
 const Stores: React.FC = () => {
   const [form] = Form.useForm<StorePayload>();
   const [modalOpen, setModalOpen] = useState(false);
@@ -69,7 +62,7 @@ const Stores: React.FC = () => {
   const openCreateModal = () => {
     setEditingStore(null);
     form.resetFields();
-    form.setFieldsValue({ status: 'ACTIVE' });
+    form.setFieldsValue({ status: STORE_STATUS.ACTIVE });
     setModalOpen(true);
   };
 
@@ -246,10 +239,12 @@ const Stores: React.FC = () => {
       title: 'Estado',
       dataIndex: 'status',
       sorter: (a, b) =>
-        STATUS_LABELS[a.status].localeCompare(STATUS_LABELS[b.status]),
+        STORE_STATUS_LABELS[a.status].localeCompare(
+          STORE_STATUS_LABELS[b.status],
+        ),
       render: (_, record) => (
-        <Tag color={STATUS_COLOR_MAP[record.status]}>
-          {STATUS_LABELS[record.status]}
+        <Tag color={STORE_STATUS_COLORS[record.status]}>
+          {STORE_STATUS_LABELS[record.status]}
         </Tag>
       ),
     },
@@ -361,11 +356,11 @@ const Stores: React.FC = () => {
                         : compareStrings(b.external_id, a.external_id);
                     case 'status':
                       return order === 'ascend'
-                        ? STATUS_LABELS[a.status].localeCompare(
-                            STATUS_LABELS[b.status],
+                        ? STORE_STATUS_LABELS[a.status].localeCompare(
+                            STORE_STATUS_LABELS[b.status],
                           )
-                        : STATUS_LABELS[b.status].localeCompare(
-                            STATUS_LABELS[a.status],
+                        : STORE_STATUS_LABELS[b.status].localeCompare(
+                            STORE_STATUS_LABELS[a.status],
                           );
                     case 'created_at':
                       return order === 'ascend'
@@ -508,8 +503,14 @@ const Stores: React.FC = () => {
           >
             <Select
               options={[
-                { label: STATUS_LABELS.ACTIVE, value: 'ACTIVE' },
-                { label: STATUS_LABELS.INACTIVE, value: 'INACTIVE' },
+                {
+                  label: STORE_STATUS_LABELS[STORE_STATUS.ACTIVE],
+                  value: STORE_STATUS.ACTIVE,
+                },
+                {
+                  label: STORE_STATUS_LABELS[STORE_STATUS.INACTIVE],
+                  value: STORE_STATUS.INACTIVE,
+                },
               ]}
             />
           </Form.Item>

@@ -1,3 +1,4 @@
+import { API_ENDPOINTS } from '@/constants';
 import { apiRequest } from '@/services/client';
 import type {
   Store,
@@ -83,16 +84,19 @@ export const fetchStores = async (
     requestParams.name = nameParam;
   }
 
-  const response = await apiRequest<StoreListApiResponse>('/v1/stores', {
-    params: requestParams,
-    retry: { retries: 1 },
-  });
+  const response = await apiRequest<StoreListApiResponse>(
+    API_ENDPOINTS.STORES.LIST,
+    {
+      params: requestParams,
+      retry: { retries: 1 },
+    },
+  );
 
   return mapStoreListResponse(response, params);
 };
 
 export const createStore = async (payload: StorePayload): Promise<Store> => {
-  return apiRequest<Store>('/v1/stores', {
+  return apiRequest<Store>(API_ENDPOINTS.STORES.CREATE, {
     method: 'POST',
     data: payload,
     retry: { retries: 0 },
@@ -103,7 +107,7 @@ export const updateStore = async (
   id: number,
   payload: StorePayload,
 ): Promise<Store> => {
-  return apiRequest<Store>(`/v1/stores`, {
+  return apiRequest<Store>(API_ENDPOINTS.STORES.UPDATE, {
     method: 'PUT',
     data: { id, ...payload },
     retry: { retries: 0 },
@@ -111,7 +115,7 @@ export const updateStore = async (
 };
 
 export const deleteStore = async (id: number): Promise<void> => {
-  return apiRequest<void>(`/v1/stores/${id}`, {
+  return apiRequest<void>(API_ENDPOINTS.STORES.DELETE(id), {
     method: 'DELETE',
     retry: { retries: 0 },
   });
@@ -122,7 +126,7 @@ export const downloadStores = async (): Promise<{
   filename: string;
 }> => {
   try {
-    const response = await apiRequest<any>('/v1/stores/export', {
+    const response = await apiRequest<any>(API_ENDPOINTS.STORES.EXPORT, {
       method: 'GET',
       responseType: 'blob',
       getResponse: true,
@@ -166,7 +170,7 @@ export const uploadStoresFile = async (
   formData.append('file', file);
 
   // Do not set Content-Type header manually; the browser will add boundary.
-  const response = await apiRequest<any>('/v1/stores/upload', {
+  const response = await apiRequest<any>(API_ENDPOINTS.STORES.UPLOAD, {
     method: 'POST',
     data: formData,
     requestType: undefined,

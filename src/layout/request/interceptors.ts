@@ -1,3 +1,4 @@
+import { API_ENDPOINTS } from '@/constants';
 import { refreshAuthToken } from '@/services/auth/tokenService';
 import type { StoredAuthTokens } from '@/types/auth';
 import { getApiErrorMessage, normalizeApiError } from '@/utils/apiError';
@@ -20,11 +21,11 @@ import {
 import { message } from 'antd';
 
 const AUTH_EXCLUDED_PATHS = [
-  '/auth/login',
-  '/auth/refresh',
-  '/auth/initiate/password/reset',
-  '/auth/password/reset/verify-token',
-  '/auth/password/reset',
+  API_ENDPOINTS.AUTH.LOGIN,
+  API_ENDPOINTS.AUTH.REFRESH,
+  API_ENDPOINTS.AUTH.INITIATE_PASSWORD_RESET,
+  API_ENDPOINTS.AUTH.VERIFY_PASSWORD_RESET_TOKEN,
+  API_ENDPOINTS.AUTH.PASSWORD_RESET,
 ];
 
 type AuthAxiosRequestConfig = AxiosRequestConfig & {

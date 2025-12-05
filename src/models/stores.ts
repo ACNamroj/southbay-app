@@ -1,3 +1,4 @@
+import { DEFAULT_PAGE_SIZE } from '@/constants';
 import {
   createStore,
   deleteStore,
@@ -13,8 +14,6 @@ import type {
   StorePayload,
 } from '@/types/store';
 import { useCallback, useRef, useState } from 'react';
-
-const DEFAULT_PAGE_SIZE = 10;
 
 const useStoresModel = () => {
   const [stores, setStores] = useState<Store[]>([]);
