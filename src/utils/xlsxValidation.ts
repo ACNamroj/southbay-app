@@ -33,11 +33,13 @@ export async function validateStoresUploadFile(file: File): Promise<void> {
   if (!sheetName) {
     throw new Error('El archivo no contiene hojas');
   }
+
   const ws = workbook.Sheets[sheetName];
   const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
   if (!rows.length) {
     throw new Error('El archivo no contiene datos');
   }
+
   const headerRow = (rows[0] || []).map((c) => String(c ?? ''));
   const headersNorm = headerRow.map((h) => normalize(h));
 

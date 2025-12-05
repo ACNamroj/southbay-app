@@ -47,7 +47,9 @@ const deleteCookie = (name: string) => {
 };
 
 export const readStoredAuthTokens = (): StoredAuthTokens | undefined => {
-  if (!isBrowser()) return undefined;
+  if (!isBrowser()) {
+    return undefined;
+  }
   const raw = window.localStorage.getItem(AUTH_STORAGE_KEY);
   if (!raw) {
     return undefined;
