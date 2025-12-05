@@ -1,5 +1,6 @@
 import { API_ENDPOINTS } from '@/constants';
 import { apiRequest } from '@/services/client';
+import type { ApiListResponse } from '@/types/api';
 import type {
   Store,
   StoreListParams,
@@ -9,21 +10,29 @@ import type {
 } from '@/types/store';
 import { getApiErrorMessage } from '@/utils/apiError';
 
+/**
+ * Store list API response type
+ *
+ * Supports both legacy array format and standardized ApiListResponse format.
+ * New endpoints should use ApiListResponse<Store> directly.
+ *
+ * @see {@link ApiListResponse} for the standardized format
+ */
 type StoreListApiResponse =
-  | Store[]
-  | {
-      data?: Store[];
-      page: number;
-      size: number;
-      total: number;
-      total_pages?: number;
-      last: boolean;
-    };
+  | Store[] // Legacy array format
+  | ApiListResponse<Store>; // Standardized format
 
+/**
+ * Maps API response to standardized StoreListResult format
+ *
+ * Handles both legacy array format and standardized ApiListResponse format.
+ * Normalizes pagination to 1-based page numbers.
+ */
 const mapStoreListResponse = (
   response: StoreListApiResponse,
   params: StoreListParams,
 ): StoreListResult => {
+  // Handle legacy array format
   if (Array.isArray(response)) {
     const fallbackSize = (params.size ?? response.length) || 10;
     return {
@@ -35,6 +44,7 @@ const mapStoreListResponse = (
     };
   }
 
+  // Handle standardized ApiListResponse format
   const list = Array.isArray(response.data) ? response.data : [];
   const inputPageZeroBased =
     params.page !== undefined
