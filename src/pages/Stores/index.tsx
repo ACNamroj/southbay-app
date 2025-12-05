@@ -201,10 +201,37 @@ const Stores: React.FC = () => {
     status: 'done',
   }));
 
+  // Helpers: sorting and formatting
+  const compareStrings = (a?: string, b?: string) => {
+    return (a || '').localeCompare(b || '');
+  };
+
+  const compareDates = (a?: string, b?: string) => {
+    if (!a && !b) return 0;
+    if (!a) return 1; // undefined goes last on ASC
+    if (!b) return -1;
+    return new Date(a).getTime() - new Date(b).getTime();
+  };
+
+  const formatDateTime = (v?: string) =>
+    v
+      ? new Date(v).toLocaleString('es-AR', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          // Force 24-hour (military) time format
+          hour12: false,
+          hourCycle: 'h23',
+        })
+      : '—';
+
   const columns: ProColumns<Store>[] = [
     {
       title: 'Nombre de la tienda',
       dataIndex: 'name',
+      sorter: (a, b) => compareStrings(a.name, b.name),
       render: (_, record) => (
         <Typography.Text strong>{record.name}</Typography.Text>
       ),
@@ -212,16 +239,31 @@ const Stores: React.FC = () => {
     {
       title: 'ID externo',
       dataIndex: 'external_id',
+      sorter: (a, b) => compareStrings(a.external_id, b.external_id),
       ellipsis: true,
     },
     {
       title: 'Estado',
       dataIndex: 'status',
+      sorter: (a, b) =>
+        STATUS_LABELS[a.status].localeCompare(STATUS_LABELS[b.status]),
       render: (_, record) => (
         <Tag color={STATUS_COLOR_MAP[record.status]}>
           {STATUS_LABELS[record.status]}
         </Tag>
       ),
+    },
+    {
+      title: 'Fecha de creación',
+      dataIndex: 'created_at',
+      sorter: (a, b) => compareDates(a.created_at, b.created_at),
+      render: (_, record) => <span>{formatDateTime(record.created_at)}</span>,
+    },
+    {
+      title: 'Fecha de actualización',
+      dataIndex: 'updated_at',
+      sorter: (a, b) => compareDates(a.updated_at, b.updated_at),
+      render: (_, record) => <span>{formatDateTime(record.updated_at)}</span>,
     },
     {
       title: 'Acciones',
@@ -292,14 +334,56 @@ const Stores: React.FC = () => {
             total: pagination.total,
             showSizeChanger: true,
           }}
-          request={async (params) => {
+          request={async (params, sort) => {
             const result = await loadStores({
               page: params.current,
               size: params.pageSize,
               name: searchRef.current,
             });
+
+            // Local sorting on the current page, based on column sorter selection
+            let data = [...result.data];
+            if (sort && Object.keys(sort).length > 0) {
+              const [field, order] = Object.entries(sort)[0] as [
+                keyof Store & string,
+                'ascend' | 'descend' | null,
+              ];
+              if (order) {
+                data.sort((a: Store, b: Store) => {
+                  switch (field) {
+                    case 'name':
+                      return order === 'ascend'
+                        ? compareStrings(a.name, b.name)
+                        : compareStrings(b.name, a.name);
+                    case 'external_id':
+                      return order === 'ascend'
+                        ? compareStrings(a.external_id, b.external_id)
+                        : compareStrings(b.external_id, a.external_id);
+                    case 'status':
+                      return order === 'ascend'
+                        ? STATUS_LABELS[a.status].localeCompare(
+                            STATUS_LABELS[b.status],
+                          )
+                        : STATUS_LABELS[b.status].localeCompare(
+                            STATUS_LABELS[a.status],
+                          );
+                    case 'created_at':
+                      return order === 'ascend'
+                        ? compareDates(a.created_at, b.created_at)
+                        : compareDates(b.created_at, a.created_at);
+                    case 'updated_at':
+                      return order === 'ascend'
+                        ? compareDates(a.updated_at, b.updated_at)
+                        : compareDates(b.updated_at, a.updated_at);
+                    default:
+                      return 0;
+                  }
+                });
+              }
+            }
+
             return {
-              data: result.data,
+              data,
               success: true,
               total: result.total,
             };
