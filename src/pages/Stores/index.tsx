@@ -390,7 +390,7 @@ const Stores: React.FC = () => {
         okText="Enviar"
         cancelText="Cancelar"
         confirmLoading={uploading}
-        destroyOnClose
+        destroyOnHidden
       >
         <div style={{ marginBottom: 12 }}>
           <div>

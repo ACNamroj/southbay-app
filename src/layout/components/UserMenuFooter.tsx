@@ -203,7 +203,7 @@ const UserMenuFooter: React.FC = () => {
       </Dropdown>
       <Modal
         centered
-        destroyOnClose
+        destroyOnHidden
         title="Actualizar contraseña"
         open={isPasswordModalOpen}
         okText="Actualizar"
