@@ -199,6 +199,8 @@ const Stores: React.FC = () => {
       title: 'Nombre de la tienda',
       dataIndex: 'name',
       sorter: (a, b) => compareStrings(a.name, b.name),
+      ellipsis: true,
+      responsive: ['xs', 'sm', 'md', 'lg', 'xl'],
       render: (_, record) => (
         <Typography.Text strong>{record.name}</Typography.Text>
       ),
@@ -208,6 +210,7 @@ const Stores: React.FC = () => {
       dataIndex: 'external_id',
       sorter: (a, b) => compareStrings(a.external_id, b.external_id),
       ellipsis: true,
+      responsive: ['sm', 'md', 'lg', 'xl'],
     },
     {
       title: 'Estado',
@@ -216,6 +219,7 @@ const Stores: React.FC = () => {
         ENTITY_STATUS_LABELS[a.status].localeCompare(
           ENTITY_STATUS_LABELS[b.status],
         ),
+      responsive: ['xs', 'sm', 'md', 'lg', 'xl'],
       render: (_, record) => (
         <Tag color={ENTITY_STATUS_COLORS[record.status]}>
           {ENTITY_STATUS_LABELS[record.status]}
@@ -226,18 +230,21 @@ const Stores: React.FC = () => {
       title: 'Fecha de creación',
       dataIndex: 'created_at',
       sorter: (a, b) => compareDates(a.created_at, b.created_at),
+      responsive: ['lg', 'xl'],
       render: (_, record) => <span>{formatDateTime(record.created_at)}</span>,
     },
     {
       title: 'Fecha de actualización',
       dataIndex: 'updated_at',
       sorter: (a, b) => compareDates(a.updated_at, b.updated_at),
+      responsive: ['lg', 'xl'],
       render: (_, record) => <span>{formatDateTime(record.updated_at)}</span>,
     },
     {
       title: 'Acciones',
       valueType: 'option',
       width: 140,
+      responsive: ['xs', 'sm', 'md', 'lg', 'xl'],
       render: (_, record) => (
         <Space size="small">
           <Button
@@ -304,6 +311,8 @@ const Stores: React.FC = () => {
             persistenceKey: 'stores-table-columns',
             persistenceType: 'localStorage',
           }}
+          scroll={{ x: 'max-content' }}
+          tableLayout="fixed"
           loading={loading}
           pagination={{
             current: pagination.current,

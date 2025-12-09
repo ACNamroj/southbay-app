@@ -154,6 +154,7 @@ const SegmentationPage: React.FC = () => {
       dataIndex: 'label',
       sorter: (a, b) => compareStrings(a.label || a.name, b.label || b.name),
       ellipsis: true,
+      responsive: ['xs', 'sm', 'md', 'lg', 'xl'],
       render: (_, r) => <b>{r.label || r.name}</b>,
     },
     {
@@ -161,6 +162,8 @@ const SegmentationPage: React.FC = () => {
       dataIndex: 'name',
       sorter: (a, b) => compareStrings(a.name, b.name),
       hideInSearch: true,
+      ellipsis: true,
+      responsive: ['sm', 'md', 'lg', 'xl'],
     },
     {
       title: 'Tope de Descuento (%)',
@@ -168,6 +171,7 @@ const SegmentationPage: React.FC = () => {
       sorter: (a, b) =>
         compareNumbers(a.discount_percentage_cap, b.discount_percentage_cap),
       hideInSearch: true,
+      responsive: ['sm', 'md', 'lg', 'xl'],
       renderText: (v) => (v ?? 0).toString(),
     },
     {
@@ -179,6 +183,7 @@ const SegmentationPage: React.FC = () => {
           b.allocated_balance ?? undefined,
         ),
       hideInSearch: true,
+      responsive: ['md', 'lg', 'xl'],
       render: (_, r) => <span>{formatCurrency(r.allocated_balance)}</span>,
     },
     {
@@ -195,6 +200,7 @@ const SegmentationPage: React.FC = () => {
           value: s,
         })),
       },
+      responsive: ['xs', 'sm', 'md', 'lg', 'xl'],
       render: (_, record) => (
         <Tag color={ENTITY_STATUS_COLORS[record.status]}>
           {ENTITY_STATUS_LABELS[record.status]}
@@ -205,12 +211,14 @@ const SegmentationPage: React.FC = () => {
       title: 'Fecha de creación',
       dataIndex: 'created_at',
       sorter: (a, b) => compareDates(a.created_at, b.created_at),
+      responsive: ['lg', 'xl'],
       render: (_, record) => <span>{formatDateTime(record.created_at)}</span>,
     },
     {
       title: 'Fecha de actualización',
       dataIndex: 'updated_at',
       sorter: (a, b) => compareDates(a.updated_at, b.updated_at),
+      responsive: ['lg', 'xl'],
       render: (_, record) => <span>{formatDateTime(record.updated_at)}</span>,
     },
     {
@@ -218,6 +226,7 @@ const SegmentationPage: React.FC = () => {
       dataIndex: 'actions',
       valueType: 'option',
       width: 120,
+      responsive: ['xs', 'sm', 'md', 'lg', 'xl'],
       render: (_, record) => (
         <Space>
           <Button
@@ -267,6 +276,8 @@ const SegmentationPage: React.FC = () => {
             persistenceKey: 'segmentation-table-columns',
             persistenceType: 'localStorage',
           }}
+          scroll={{ x: 'max-content' }}
+          tableLayout="fixed"
           loading={loading}
           pagination={{
             current: pagination.current,
