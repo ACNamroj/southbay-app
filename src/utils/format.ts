@@ -20,9 +20,15 @@ export const compareStrings = (a?: string, b?: string): number => {
  * @returns Comparison result for sorting (undefined values go last on ascending)
  */
 export const compareDates = (a?: string, b?: string): number => {
-  if (!a && !b) return 0;
-  if (!a) return 1; // undefined goes last on ASC
-  if (!b) return -1;
+  if (!a && !b) {
+    return 0;
+  }
+  if (!a) {
+    return 1;
+  }
+  if (!b) {
+    return -1;
+  }
   return new Date(a).getTime() - new Date(b).getTime();
 };
 

@@ -426,15 +426,18 @@ const SegmentationPage: React.FC = () => {
               style={{ width: '100%' }}
               precision={2}
               formatter={(value) => {
-                if (value === undefined || value === null || value === '')
+                if (value === undefined || value === null || value === '') {
                   return '' as any;
+                }
                 const n = Number(
                   String(value)
                     .replace(/[^0-9.,-]/g, '')
                     .replace('.', '')
                     .replace(',', '.'),
                 );
-                if (Number.isNaN(n)) return value as any;
+                if (Number.isNaN(n)) {
+                  return value as any;
+                }
                 return new Intl.NumberFormat('es-AR', {
                   style: 'currency',
                   currency: 'ARS',
@@ -442,7 +445,9 @@ const SegmentationPage: React.FC = () => {
                 }).format(n);
               }}
               parser={(value) => {
-                if (!value) return null as any;
+                if (!value) {
+                  return null as any;
+                }
                 const cleaned = value
                   .replace(/[^0-9,-]/g, '')
                   .replace('.', '')
