@@ -175,7 +175,7 @@ const SegmentationPage: React.FC = () => {
       renderText: (v) => (v ?? 0).toString(),
     },
     {
-      title: 'Saldo asignado',
+      title: 'Monto Límite',
       dataIndex: 'allocated_balance',
       sorter: (a, b) =>
         compareNumbers(

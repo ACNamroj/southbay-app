@@ -206,7 +206,7 @@ const Stores: React.FC = () => {
       ),
     },
     {
-      title: 'ID externo',
+      title: 'ID Externo',
       dataIndex: 'external_id',
       sorter: (a, b) => compareStrings(a.external_id, b.external_id),
       ellipsis: true,
@@ -487,7 +487,7 @@ const Stores: React.FC = () => {
           </Form.Item>
           <Form.Item
             name="external_id"
-            label="ID externo"
+            label="ID Externo"
             rules={[
               {
                 required: true,
