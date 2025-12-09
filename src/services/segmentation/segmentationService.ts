@@ -1,16 +1,22 @@
-import { API_ENDPOINTS, DEFAULT_PAGE_SIZE, EntityStatus } from '@/constants';
+import { API_ENDPOINTS, DEFAULT_PAGE_SIZE, ENTITY_STATUS } from '@/constants';
 import { apiRequest } from '@/services/client';
 import type { ApiListResponse } from '@/types/api';
 import type {
+  Segmentation,
   SegmentationListParams,
   SegmentationListResult,
   SegmentationPayload,
-  UserAccountType,
 } from '@/types/segmentation';
 
 type SegmentationListApiResponse =
-  | UserAccountType[]
-  | ApiListResponse<UserAccountType>;
+  | Segmentation[]
+  | ApiListResponse<Segmentation>;
+
+const normalizeItem = (item: Segmentation, index: number): Segmentation => ({
+  ...item,
+  // Generate id if missing (use index as fallback for display purposes)
+  id: item.id ?? index,
+});
 
 const mapListResponse = (
   response: SegmentationListApiResponse,
@@ -19,7 +25,7 @@ const mapListResponse = (
   if (Array.isArray(response)) {
     const fallbackSize = (params.size ?? response.length) || DEFAULT_PAGE_SIZE;
     return {
-      data: response,
+      data: response.map((item, index) => normalizeItem(item, index)),
       total: response.length,
       page: params.page ?? 1,
       page_size: fallbackSize,
@@ -27,7 +33,9 @@ const mapListResponse = (
     };
   }
 
-  const list = Array.isArray(response.data) ? response.data : [];
+  const list = Array.isArray(response.data)
+    ? response.data.map((item, index) => normalizeItem(item, index))
+    : [];
   const inputPageZeroBased =
     params.page !== undefined
       ? Math.max(params.page - 1, 0)
@@ -48,7 +56,7 @@ const mapListResponse = (
   };
 };
 
-const normalizeStatusParam = (status?: EntityStatus | EntityStatus[]) => {
+const normalizeStatusParam = (status?: ENTITY_STATUS | ENTITY_STATUS[]) => {
   if (!status) return undefined;
   return Array.isArray(status) ? status.join(',') : status;
 };
@@ -75,7 +83,7 @@ export const fetchSegmentations = async (
   }
 
   const response = await apiRequest<SegmentationListApiResponse>(
-    API_ENDPOINTS.SEGMENTATION.LIST,
+    API_ENDPOINTS.SEGMENTATIONS.LIST,
     { params: requestParams, retry: { retries: 1 } },
   );
 
@@ -84,8 +92,8 @@ export const fetchSegmentations = async (
 
 export const createSegmentation = async (
   payload: SegmentationPayload,
-): Promise<UserAccountType> => {
-  return apiRequest<UserAccountType>(API_ENDPOINTS.SEGMENTATION.CREATE, {
+): Promise<Segmentation> => {
+  return apiRequest<Segmentation>(API_ENDPOINTS.SEGMENTATIONS.CREATE, {
     method: 'POST',
     data: payload,
     retry: { retries: 0 },
@@ -95,8 +103,8 @@ export const createSegmentation = async (
 export const updateSegmentation = async (
   id: number,
   payload: SegmentationPayload,
-): Promise<UserAccountType> => {
-  return apiRequest<UserAccountType>(API_ENDPOINTS.SEGMENTATION.UPDATE(id), {
+): Promise<Segmentation> => {
+  return apiRequest<Segmentation>(API_ENDPOINTS.SEGMENTATIONS.UPDATE(id), {
     method: 'PUT',
     data: payload,
     retry: { retries: 0 },
@@ -104,7 +112,7 @@ export const updateSegmentation = async (
 };
 
 export const deleteSegmentation = async (id: number): Promise<void> => {
-  return apiRequest<void>(API_ENDPOINTS.SEGMENTATION.DELETE(id), {
+  return apiRequest<void>(API_ENDPOINTS.SEGMENTATIONS.DELETE(id), {
     method: 'DELETE',
     retry: { retries: 0 },
   });

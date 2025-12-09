@@ -48,10 +48,10 @@ export const API_ENDPOINTS = {
   },
 
   // Segmentation endpoints
-  SEGMENTATION: {
-    LIST: '/v1/segmentation',
-    CREATE: '/v1/segmentation',
-    UPDATE: (id: number) => `/v1/segmentation/${id}`,
-    DELETE: (id: number) => `/v1/segmentation/${id}`,
+  SEGMENTATIONS: {
+    LIST: '/v1/segmentations',
+    CREATE: '/v1/segmentations',
+    UPDATE: (id: number) => `/v1/segmentations/${id}`,
+    DELETE: (id: number) => `/v1/segmentations/${id}`,
   },
 } as const;

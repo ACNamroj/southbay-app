@@ -77,9 +77,9 @@ export default defineConfig({
       icon: 'users',
     },
     {
-      path: '/segmentation',
+      path: '/segmentations',
       name: 'Segmentación',
-      title: 'Gestión de Segmentaciones',
+      title: 'Segmentación de Usuarios',
       component: './Segmentation',
       wrappers: ['@/wrappers/auth'],
       icon: 'segmentation',

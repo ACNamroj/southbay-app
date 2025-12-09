@@ -6,15 +6,15 @@ import {
   updateSegmentation,
 } from '@/services/segmentation/segmentationService';
 import type {
+  Segmentation,
   SegmentationListParams,
   SegmentationListResult,
   SegmentationPayload,
-  UserAccountType,
 } from '@/types/segmentation';
 import { useCallback, useRef, useState } from 'react';
 
 const useSegmentationModel = () => {
-  const [items, setItems] = useState<UserAccountType[]>([]);
+  const [items, setItems] = useState<Segmentation[]>([]);
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({
     current: 1,

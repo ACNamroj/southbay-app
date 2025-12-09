@@ -1,11 +1,11 @@
-import type { EntityStatus } from '@/constants';
+import type { ENTITY_STATUS } from '@/constants';
 
-export type UserAccountType = {
-  id: number;
+export type Segmentation = {
+  id?: number;
   name: string;
   label: string;
-  discount_percentage?: number;
-  status: EntityStatus;
+  discount_percentage_cap?: number;
+  status: ENTITY_STATUS;
   created_at?: string;
   updated_at?: string;
 };
@@ -18,11 +18,11 @@ export type SegmentationListParams = {
   page_size?: number;
   name?: string;
   search?: string;
-  status?: EntityStatus | EntityStatus[];
+  status?: ENTITY_STATUS | ENTITY_STATUS[];
 };
 
 export type SegmentationListResult = {
-  data: UserAccountType[];
+  data: Segmentation[];
   total: number;
   page: number;
   page_size: number;
@@ -34,6 +34,6 @@ export type SegmentationListResult = {
 export type SegmentationPayload = {
   name: string;
   label: string;
-  discount_percentage?: number;
-  status?: EntityStatus;
+  discount_percentage_cap?: number;
+  status?: ENTITY_STATUS;
 };

@@ -1,12 +1,10 @@
 import {
-  ENTITY_STATUS,
+  ENTITY_STATUS_COLORS,
   ENTITY_STATUS_LABELS,
-  STORE_STATUS_COLORS,
+  STATUS,
 } from '@/constants';
-import type {
-  SegmentationPayload,
-  UserAccountType,
-} from '@/types/segmentation';
+import type { Segmentation, SegmentationPayload } from '@/types/segmentation';
+import { compareDates, compareStrings, formatDateTime } from '@/utils/format';
 import {
   DeleteOutlined,
   EditOutlined,
@@ -22,6 +20,7 @@ import {
 import { useModel } from '@umijs/max';
 import {
   Button,
+  Card,
   Form,
   Input,
   InputNumber,
@@ -37,7 +36,7 @@ const SegmentationPage: React.FC = () => {
   const [form] = Form.useForm<SegmentationPayload>();
   const [modalOpen, setModalOpen] = useState(false);
   const [modalSubmitting, setModalSubmitting] = useState(false);
-  const [editingItem, setEditingItem] = useState<UserAccountType | null>(null);
+  const [editingItem, setEditingItem] = useState<Segmentation | null>(null);
   const searchRef = useRef('');
   const actionRef = useRef<ActionType>();
   const { loadSegmentations, create, update, remove, loading, pagination } =
@@ -47,18 +46,18 @@ const SegmentationPage: React.FC = () => {
     setEditingItem(null);
     form.resetFields();
     form.setFieldsValue({
-      status: ENTITY_STATUS.ACTIVE,
-      discount_percentage: 0,
+      status: STATUS.ACTIVE,
+      discount_percentage_cap: 0,
     });
     setModalOpen(true);
   };
 
-  const openEditModal = (item: UserAccountType) => {
+  const openEditModal = (item: Segmentation) => {
     setEditingItem(item);
     form.setFieldsValue({
       name: item.name,
       label: item.label,
-      discount_percentage: item.discount_percentage ?? 0,
+      discount_percentage_cap: item.discount_percentage_cap ?? 0,
       status: item.status,
     });
     setModalOpen(true);
@@ -75,6 +74,10 @@ const SegmentationPage: React.FC = () => {
       const values = await form.validateFields();
       setModalSubmitting(true);
       if (editingItem) {
+        if (!editingItem.id) {
+          message.error('No se puede actualizar: ID no disponible');
+          return;
+        }
         await update(editingItem.id, values);
         message.success('Segmentación actualizada correctamente');
       } else {
@@ -90,7 +93,25 @@ const SegmentationPage: React.FC = () => {
     }
   };
 
-  const handleDelete = (item: UserAccountType) => {
+  const handleSearch = (value: string) => {
+    const nextValue = value.trim();
+    searchRef.current = nextValue;
+    actionRef.current?.reload();
+  };
+
+  // Helpers: sorting and formatting
+  const compareNumbers = (a?: number, b?: number) => {
+    if (a === undefined && b === undefined) return 0;
+    if (a === undefined) return 1;
+    if (b === undefined) return -1;
+    return a - b;
+  };
+
+  const handleDelete = (item: Segmentation) => {
+    if (!item.id) {
+      message.error('No se puede eliminar: ID no disponible');
+      return;
+    }
     Modal.confirm({
       title: '¿Eliminar segmentación? ',
       icon: <ExclamationCircleOutlined />,
@@ -103,46 +124,66 @@ const SegmentationPage: React.FC = () => {
       okType: 'danger',
       cancelText: 'Cancelar',
       async onOk() {
-        await remove(item.id); // same behavior as storeService delete
+        await remove(item.id!);
         message.success('Segmentación eliminada');
         actionRef.current?.reload();
       },
     });
   };
 
-  const columns: ProColumns<UserAccountType>[] = [
+  const columns: ProColumns<Segmentation>[] = [
     {
       title: 'Nombre de Segmentación',
       dataIndex: 'label',
+      sorter: (a, b) => compareStrings(a.label || a.name, b.label || b.name),
       ellipsis: true,
       render: (_, r) => r.label || r.name,
     },
     {
       title: 'Nombre técnico',
       dataIndex: 'name',
+      sorter: (a, b) => compareStrings(a.name, b.name),
       hideInSearch: true,
     },
     {
-      title: 'Descuento (%)',
-      dataIndex: 'discount_percentage',
+      title: 'Tope de Descuento (%)',
+      dataIndex: 'discount_percentage_cap',
+      sorter: (a, b) =>
+        compareNumbers(a.discount_percentage_cap, b.discount_percentage_cap),
       hideInSearch: true,
       renderText: (v) => (v ?? 0).toString(),
     },
     {
       title: 'Estado',
       dataIndex: 'status',
+      sorter: (a, b) =>
+        ENTITY_STATUS_LABELS[a.status].localeCompare(
+          ENTITY_STATUS_LABELS[b.status],
+        ),
       valueType: 'select',
       fieldProps: {
-        options: Object.values(ENTITY_STATUS).map((s) => ({
+        options: Object.values(STATUS).map((s) => ({
           label: ENTITY_STATUS_LABELS[s],
           value: s,
         })),
       },
       render: (_, record) => (
-        <Tag color={STORE_STATUS_COLORS[record.status]}>
+        <Tag color={ENTITY_STATUS_COLORS[record.status]}>
           {ENTITY_STATUS_LABELS[record.status]}
         </Tag>
       ),
+    },
+    {
+      title: 'Fecha de creación',
+      dataIndex: 'created_at',
+      sorter: (a, b) => compareDates(a.created_at, b.created_at),
+      render: (_, record) => <span>{formatDateTime(record.created_at)}</span>,
+    },
+    {
+      title: 'Fecha de actualización',
+      dataIndex: 'updated_at',
+      sorter: (a, b) => compareDates(a.updated_at, b.updated_at),
+      render: (_, record) => <span>{formatDateTime(record.updated_at)}</span>,
     },
     {
       title: 'Acciones',
@@ -169,48 +210,110 @@ const SegmentationPage: React.FC = () => {
 
   return (
     <PageContainer
-      header={{ title: 'Segmentación de Usuarios' }}
-      loading={loading}
-    >
-      <ProTable<UserAccountType>
-        headerTitle="Buscar segmentación"
-        rowKey="id"
-        actionRef={actionRef}
-        columns={columns}
-        search={false}
-        pagination={pagination}
-        toolBarRender={() => [
-          <Input.Search
-            key="search"
-            placeholder="Buscar segmentación..."
-            allowClear
-            onSearch={(value) => {
-              searchRef.current = value;
-              actionRef.current?.reload();
-            }}
-          />,
+      ghost
+      header={{
+        title: 'Segmentación de Usuarios',
+        extra: [
           <Button
-            key="create"
+            key="new"
             type="primary"
             icon={<PlusOutlined />}
             onClick={openCreateModal}
           >
             Agregar Segmentación
           </Button>,
-        ]}
-        request={async (params) => {
-          const result = await loadSegmentations({
-            page: params.current,
-            size: params.pageSize,
-            name: searchRef.current,
-          });
-          return {
-            data: result.data,
-            success: true,
-            total: result.total,
-          };
-        }}
-      />
+        ],
+      }}
+    >
+      <Card>
+        <ProTable<Segmentation>
+          rowKey="name"
+          actionRef={actionRef}
+          search={false}
+          options={{
+            reload: true,
+            density: true,
+            setting: true,
+          }}
+          loading={loading}
+          pagination={{
+            current: pagination.current,
+            pageSize: pagination.pageSize,
+            total: pagination.total,
+            showSizeChanger: true,
+          }}
+          request={async (params, sort) => {
+            const result = await loadSegmentations({
+              page: params.current,
+              size: params.pageSize,
+              name: searchRef.current,
+            });
+
+            // Local sorting on the current page, based on column sorter selection
+            let data = [...result.data];
+            if (sort && Object.keys(sort).length > 0) {
+              const [field, order] = Object.entries(sort)[0] as [
+                keyof Segmentation & string,
+                'ascend' | 'descend' | null,
+              ];
+              if (order) {
+                data.sort((a: Segmentation, b: Segmentation) => {
+                  switch (field) {
+                    case 'label':
+                      return order === 'ascend'
+                        ? compareStrings(a.label || a.name, b.label || b.name)
+                        : compareStrings(b.label || b.name, a.label || a.name);
+                    case 'name':
+                      return order === 'ascend'
+                        ? compareStrings(a.name, b.name)
+                        : compareStrings(b.name, a.name);
+                    case 'discount_percentage_cap':
+                      return order === 'ascend'
+                        ? compareNumbers(
+                            a.discount_percentage_cap,
+                            b.discount_percentage_cap,
+                          )
+                        : compareNumbers(
+                            b.discount_percentage_cap,
+                            a.discount_percentage_cap,
+                          );
+                    case 'status':
+                      return order === 'ascend'
+                        ? ENTITY_STATUS_LABELS[a.status].localeCompare(
+                            ENTITY_STATUS_LABELS[b.status],
+                          )
+                        : ENTITY_STATUS_LABELS[b.status].localeCompare(
+                            ENTITY_STATUS_LABELS[a.status],
+                          );
+                    default:
+                      return 0;
+                  }
+                });
+              }
+            }
+
+            return {
+              data,
+              success: true,
+              total: result.total,
+            };
+          }}
+          columns={columns}
+          rowSelection={{}}
+          toolbar={{
+            search: {
+              allowClear: true,
+              placeholder: 'Buscar segmentación...',
+              onSearch: handleSearch,
+              onChange: (event) => {
+                if (!event?.target?.value) {
+                  handleSearch('');
+                }
+              },
+            },
+          }}
+        />
+      </Card>
 
       <Modal
         title={editingItem ? 'Editar Segmentación' : 'Agregar Segmentación'}
@@ -236,19 +339,31 @@ const SegmentationPage: React.FC = () => {
           >
             <Input maxLength={80} placeholder="Ej: EMPLEADOS" />
           </Form.Item>
-          <Form.Item name="discount_percentage" label="Descuento (%)">
+          <Form.Item
+            name="discount_percentage_cap"
+            label="Tope de Descuento (%)"
+          >
             <InputNumber min={0} max={100} style={{ width: '100%' }} />
           </Form.Item>
-          <Form.Item
-            name="status"
-            label="Estado"
-            initialValue={ENTITY_STATUS.ACTIVE}
-          >
+          <Form.Item name="status" label="Estado" initialValue={STATUS.ACTIVE}>
             <Select
-              options={Object.values(ENTITY_STATUS).map((s) => ({
-                label: ENTITY_STATUS_LABELS[s],
-                value: s,
-              }))}
+              options={
+                editingItem
+                  ? [
+                      {
+                        label: ENTITY_STATUS_LABELS[STATUS.ACTIVE],
+                        value: STATUS.ACTIVE,
+                      },
+                      {
+                        label: ENTITY_STATUS_LABELS[STATUS.INACTIVE],
+                        value: STATUS.INACTIVE,
+                      },
+                    ]
+                  : Object.values(STATUS).map((s) => ({
+                      label: ENTITY_STATUS_LABELS[s],
+                      value: s,
+                    }))
+              }
             />
           </Form.Item>
         </Form>

@@ -2,21 +2,21 @@
  * Status constants
  */
 
-export const ENTITY_STATUS = {
+export const STATUS = {
   ACTIVE: 'ACTIVE',
   INACTIVE: 'INACTIVE',
   DELETED: 'DELETED',
 } as const;
 
-export type EntityStatus = (typeof ENTITY_STATUS)[keyof typeof ENTITY_STATUS];
+export type ENTITY_STATUS = (typeof STATUS)[keyof typeof STATUS];
 
-export const ENTITY_STATUS_LABELS: Record<EntityStatus, string> = {
+export const ENTITY_STATUS_LABELS: Record<ENTITY_STATUS, string> = {
   ACTIVE: 'Activa',
   INACTIVE: 'Inactiva',
   DELETED: 'Eliminada',
 };
 
-export const STORE_STATUS_COLORS: Record<EntityStatus, string> = {
+export const ENTITY_STATUS_COLORS: Record<ENTITY_STATUS, string> = {
   ACTIVE: 'green',
   INACTIVE: 'orange',
   DELETED: 'red',

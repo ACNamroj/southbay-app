@@ -1,10 +1,10 @@
-export type { EntityStatus } from '@/constants';
+import { ENTITY_STATUS } from '@/constants';
 
 export type Store = {
   id: number;
   external_id: string;
   name: string;
-  status: EntityStatus;
+  status: ENTITY_STATUS;
   created_at?: string;
   updated_at?: string;
 };
@@ -17,7 +17,7 @@ export type StoreListParams = {
   page_size?: number;
   name?: string;
   search?: string;
-  status?: EntityStatus | EntityStatus[];
+  status?: ENTITY_STATUS | ENTITY_STATUS[];
 };
 
 export type StoreListResult = {
@@ -33,5 +33,5 @@ export type StoreListResult = {
 export type StorePayload = {
   external_id: string;
   name: string;
-  status?: EntityStatus;
+  status?: ENTITY_STATUS;
 };

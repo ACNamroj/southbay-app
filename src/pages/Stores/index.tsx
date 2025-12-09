@@ -1,9 +1,10 @@
 import {
-  ENTITY_STATUS,
+  ENTITY_STATUS_COLORS,
   ENTITY_STATUS_LABELS,
-  STORE_STATUS_COLORS,
+  STATUS,
 } from '@/constants';
 import type { Store, StorePayload } from '@/types/store';
+import { compareDates, compareStrings, formatDateTime } from '@/utils/format';
 import { validateStoresUploadFile } from '@/utils/xlsxValidation';
 import {
   DeleteOutlined,
@@ -62,7 +63,7 @@ const Stores: React.FC = () => {
   const openCreateModal = () => {
     setEditingStore(null);
     form.resetFields();
-    form.setFieldsValue({ status: ENTITY_STATUS.ACTIVE });
+    form.setFieldsValue({ status: STATUS.ACTIVE });
     setModalOpen(true);
   };
 
@@ -194,32 +195,6 @@ const Stores: React.FC = () => {
     status: 'done',
   }));
 
-  // Helpers: sorting and formatting
-  const compareStrings = (a?: string, b?: string) => {
-    return (a || '').localeCompare(b || '');
-  };
-
-  const compareDates = (a?: string, b?: string) => {
-    if (!a && !b) return 0;
-    if (!a) return 1; // undefined goes last on ASC
-    if (!b) return -1;
-    return new Date(a).getTime() - new Date(b).getTime();
-  };
-
-  const formatDateTime = (v?: string) =>
-    v
-      ? new Date(v).toLocaleString('es-AR', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-          // Force 24-hour (military) time format
-          hour12: false,
-          hourCycle: 'h23',
-        })
-      : '—';
-
   const columns: ProColumns<Store>[] = [
     {
       title: 'Nombre de la tienda',
@@ -243,7 +218,7 @@ const Stores: React.FC = () => {
           ENTITY_STATUS_LABELS[b.status],
         ),
       render: (_, record) => (
-        <Tag color={STORE_STATUS_COLORS[record.status]}>
+        <Tag color={ENTITY_STATUS_COLORS[record.status]}>
           {ENTITY_STATUS_LABELS[record.status]}
         </Tag>
       ),
@@ -508,12 +483,12 @@ const Stores: React.FC = () => {
             <Select
               options={[
                 {
-                  label: ENTITY_STATUS_LABELS[ENTITY_STATUS.ACTIVE],
-                  value: ENTITY_STATUS.ACTIVE,
+                  label: ENTITY_STATUS_LABELS[STATUS.ACTIVE],
+                  value: STATUS.ACTIVE,
                 },
                 {
-                  label: ENTITY_STATUS_LABELS[ENTITY_STATUS.INACTIVE],
-                  value: ENTITY_STATUS.INACTIVE,
+                  label: ENTITY_STATUS_LABELS[STATUS.INACTIVE],
+                  value: STATUS.INACTIVE,
                 },
               ]}
             />

@@ -1,8 +1,7 @@
-import { API_ENDPOINTS, DEFAULT_PAGE_SIZE } from '@/constants';
+import { API_ENDPOINTS, DEFAULT_PAGE_SIZE, ENTITY_STATUS } from '@/constants';
 import { apiRequest } from '@/services/client';
 import type { ApiListResponse } from '@/types/api';
 import type {
-  EntityStatus,
   Store,
   StoreListParams,
   StoreListResult,
@@ -18,9 +17,7 @@ import { getApiErrorMessage } from '@/utils/apiError';
  *
  * @see {@link ApiListResponse} for the standardized format
  */
-type StoreListApiResponse =
-  | Store[] // Legacy array format
-  | ApiListResponse<Store>; // Standardized format
+type StoreListApiResponse = Store[] | ApiListResponse<Store>; // Standardized format
 
 /**
  * Maps API response to standardized StoreListResult format
@@ -32,7 +29,6 @@ const mapStoreListResponse = (
   response: StoreListApiResponse,
   params: StoreListParams,
 ): StoreListResult => {
-  // Handle legacy array format
   if (Array.isArray(response)) {
     const fallbackSize = (params.size ?? response.length) || DEFAULT_PAGE_SIZE;
     return {
@@ -66,7 +62,7 @@ const mapStoreListResponse = (
   };
 };
 
-const normalizeStatusParam = (status?: EntityStatus | EntityStatus[]) => {
+const normalizeStatusParam = (status?: ENTITY_STATUS | ENTITY_STATUS[]) => {
   if (!status) {
     return undefined;
   }
@@ -180,12 +176,11 @@ export const uploadStoresFile = async (
   const formData = new FormData();
   formData.append('file', file);
 
-  // Do not set Content-Type header manually; the browser will add boundary.
+  // Do not set the Content-Type header manually; the browser will add boundary.
   const response = await apiRequest<any>(API_ENDPOINTS.STORES.UPLOAD, {
     method: 'POST',
     data: formData,
     requestType: undefined,
-    // In case backend responds with 202 or 200, we don't need retries
     retry: { retries: 0 },
     useGlobalErrorHandler: true,
   });
