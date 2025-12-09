@@ -12,11 +12,20 @@ type SegmentationListApiResponse =
   | Segmentation[]
   | ApiListResponse<Segmentation>;
 
-const normalizeItem = (item: Segmentation, index: number): Segmentation => ({
-  ...item,
-  // Generate id if missing (use index as fallback for display purposes)
-  id: item.id ?? index,
-});
+const normalizeItem = (item: Segmentation, index: number): Segmentation => {
+  const apiId =
+    (item as any).id ??
+    (item as any).segmentation_id ??
+    (item as any).segmentationId;
+  const parsedId =
+    typeof apiId === 'string' ? Number.parseInt(apiId, 10) : apiId;
+
+  return {
+    ...item,
+    // Generate id if missing (use index+1 as fallback for display purposes)
+    id: Number.isFinite(parsedId) ? (parsedId as number) : index + 1,
+  };
+};
 
 const mapListResponse = (
   response: SegmentationListApiResponse,
@@ -25,7 +34,7 @@ const mapListResponse = (
   if (Array.isArray(response)) {
     const fallbackSize = (params.size ?? response.length) || DEFAULT_PAGE_SIZE;
     return {
-      data: response.map((item, index) => normalizeItem(item, index)),
+      data: response.map((item, idx) => normalizeItem(item, idx)),
       total: response.length,
       page: params.page ?? 1,
       page_size: fallbackSize,
@@ -33,9 +42,7 @@ const mapListResponse = (
     };
   }
 
-  const list = Array.isArray(response.data)
-    ? response.data.map((item, index) => normalizeItem(item, index))
-    : [];
+  const list = Array.isArray(response.data) ? response.data : [];
   const inputPageZeroBased =
     params.page !== undefined
       ? Math.max(params.page - 1, 0)
@@ -47,7 +54,7 @@ const mapListResponse = (
     (response.size ?? params.size ?? list.length) || DEFAULT_PAGE_SIZE;
 
   return {
-    data: list,
+    data: list.map((item, idx) => normalizeItem(item, idx)),
     total: response.total ?? list.length,
     page: pageZeroBased + 1,
     page_size: size,
@@ -104,9 +111,19 @@ export const updateSegmentation = async (
   id: number,
   payload: SegmentationPayload,
 ): Promise<Segmentation> => {
-  return apiRequest<Segmentation>(API_ENDPOINTS.SEGMENTATIONS.UPDATE(id), {
+  const discountPercentage =
+    payload.discount_percentage ?? payload.discount_percentage_cap ?? 0;
+
+  return apiRequest<Segmentation>(API_ENDPOINTS.SEGMENTATIONS.UPDATE, {
     method: 'PUT',
-    data: payload,
+    data: {
+      id,
+      name: payload.name,
+      label: payload.label,
+      discount_percentage: discountPercentage,
+      allocated_balance: payload.allocated_balance ?? null,
+      status: payload.status,
+    },
     retry: { retries: 0 },
   });
 };

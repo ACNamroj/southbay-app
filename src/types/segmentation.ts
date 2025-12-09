@@ -36,6 +36,8 @@ export type SegmentationPayload = {
   name: string;
   label: string;
   discount_percentage_cap?: number;
+  // Kept for update API compatibility; backend uses "discount_percentage" on update.
+  discount_percentage?: number;
   allocated_balance?: number | null;
   status?: ENTITY_STATUS;
 };

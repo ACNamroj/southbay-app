@@ -51,7 +51,8 @@ export const API_ENDPOINTS = {
   SEGMENTATIONS: {
     LIST: '/v1/segmentations',
     CREATE: '/v1/segmentations',
-    UPDATE: (id: number) => `/v1/segmentations/${id}`,
+    // Backend expects the ID inside the body, not in the URL.
+    UPDATE: '/v1/segmentations',
     DELETE: (id: number) => `/v1/segmentations/${id}`,
   },
 } as const;

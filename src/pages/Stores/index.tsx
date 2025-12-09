@@ -154,7 +154,7 @@ const Stores: React.FC = () => {
           await remove(store.id);
           message.success('Tienda eliminada');
           actionRef.current?.reload();
-        } catch (error) {
+        } catch (_) {
           // handled by apiRequest
         }
       },
@@ -174,8 +174,7 @@ const Stores: React.FC = () => {
       link.remove();
       window.URL.revokeObjectURL(url);
       message.success('Listado descargado');
-    } catch (error: any) {
-      // Surface the actual reason captured by downloadStores (e.g., backend message)
+    } catch (error) {
       message.error(error?.message || 'No se pudo descargar el listado');
     } finally {
       setExportLoading(false);

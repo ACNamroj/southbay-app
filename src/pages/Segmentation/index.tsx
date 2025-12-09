@@ -75,7 +75,9 @@ const SegmentationPage: React.FC = () => {
       const values = await form.validateFields();
       setModalSubmitting(true);
       if (editingItem) {
-        if (!editingItem.id) {
+        // Only block when the ID is truly missing (undefined or null).
+        // Allow numeric 0 or other falsy-but-valid IDs.
+        if (editingItem.id === undefined || editingItem.id === null) {
           message.error('No se puede actualizar: ID no disponible');
           return;
         }
@@ -123,7 +125,7 @@ const SegmentationPage: React.FC = () => {
   };
 
   const handleDelete = (item: Segmentation) => {
-    if (!item.id) {
+    if (item.id === undefined || item.id === null) {
       message.error('No se puede eliminar: ID no disponible');
       return;
     }
@@ -253,7 +255,7 @@ const SegmentationPage: React.FC = () => {
     >
       <Card>
         <ProTable<Segmentation>
-          rowKey="name"
+          rowKey="id"
           actionRef={actionRef}
           search={false}
           options={{
