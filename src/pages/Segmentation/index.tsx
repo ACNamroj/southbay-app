@@ -58,6 +58,7 @@ const SegmentationPage: React.FC = () => {
       name: item.name,
       label: item.label,
       discount_percentage_cap: item.discount_percentage_cap ?? 0,
+      allocated_balance: item.allocated_balance ?? null,
       status: item.status,
     });
     setModalOpen(true);
@@ -107,6 +108,20 @@ const SegmentationPage: React.FC = () => {
     return a - b;
   };
 
+  const formatCurrency = (v?: number | null) => {
+    if (v === undefined || v === null) return '—';
+    try {
+      return new Intl.NumberFormat('es-AR', {
+        style: 'currency',
+        currency: 'ARS',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(v);
+    } catch {
+      return `${v}`;
+    }
+  };
+
   const handleDelete = (item: Segmentation) => {
     if (!item.id) {
       message.error('No se puede eliminar: ID no disponible');
@@ -137,7 +152,7 @@ const SegmentationPage: React.FC = () => {
       dataIndex: 'label',
       sorter: (a, b) => compareStrings(a.label || a.name, b.label || b.name),
       ellipsis: true,
-      render: (_, r) => r.label || r.name,
+      render: (_, r) => <b>{r.label || r.name}</b>,
     },
     {
       title: 'Nombre técnico',
@@ -152,6 +167,17 @@ const SegmentationPage: React.FC = () => {
         compareNumbers(a.discount_percentage_cap, b.discount_percentage_cap),
       hideInSearch: true,
       renderText: (v) => (v ?? 0).toString(),
+    },
+    {
+      title: 'Saldo asignado',
+      dataIndex: 'allocated_balance',
+      sorter: (a, b) =>
+        compareNumbers(
+          a.allocated_balance ?? undefined,
+          b.allocated_balance ?? undefined,
+        ),
+      hideInSearch: true,
+      render: (_, r) => <span>{formatCurrency(r.allocated_balance)}</span>,
     },
     {
       title: 'Estado',
@@ -235,6 +261,10 @@ const SegmentationPage: React.FC = () => {
             density: true,
             setting: true,
           }}
+          columnsState={{
+            persistenceKey: 'segmentation-table-columns',
+            persistenceType: 'localStorage',
+          }}
           loading={loading}
           pagination={{
             current: pagination.current,
@@ -276,6 +306,16 @@ const SegmentationPage: React.FC = () => {
                         : compareNumbers(
                             b.discount_percentage_cap,
                             a.discount_percentage_cap,
+                          );
+                    case 'allocated_balance':
+                      return order === 'ascend'
+                        ? compareNumbers(
+                            a.allocated_balance ?? undefined,
+                            b.allocated_balance ?? undefined,
+                          )
+                        : compareNumbers(
+                            b.allocated_balance ?? undefined,
+                            a.allocated_balance ?? undefined,
                           );
                     case 'status':
                       return order === 'ascend'
@@ -328,22 +368,89 @@ const SegmentationPage: React.FC = () => {
           <Form.Item
             name="label"
             label="Nombre de Segmentación"
-            rules={[{ required: true, message: 'Ingresa el nombre' }]}
+            rules={[
+              {
+                required: true,
+                whitespace: true,
+                message: 'Ingresa el nombre',
+              },
+              { max: 100, message: 'Máximo 100 caracteres' },
+            ]}
           >
-            <Input maxLength={80} placeholder="Ej: Empleados" />
+            <Input maxLength={100} placeholder="Ej: EMPLEADO" />
           </Form.Item>
           <Form.Item
             name="name"
             label="Nombre técnico"
-            rules={[{ required: true, message: 'Ingresa el nombre técnico' }]}
+            rules={[
+              {
+                required: true,
+                whitespace: true,
+                message: 'Ingresa el nombre técnico',
+              },
+              { max: 50, message: 'Máximo 50 caracteres' },
+            ]}
           >
-            <Input maxLength={80} placeholder="Ej: EMPLEADOS" />
+            <Input maxLength={50} placeholder="Ej: EMPLOYEE" />
           </Form.Item>
           <Form.Item
             name="discount_percentage_cap"
             label="Tope de Descuento (%)"
+            rules={[
+              { required: true, message: 'Ingresa el tope de descuento' },
+              {
+                type: 'number',
+                min: 0,
+                max: 100,
+                message: 'Debe estar entre 0 y 100',
+              },
+              () => ({
+                validator(_, value) {
+                  if (
+                    value === undefined ||
+                    value === null ||
+                    Number.isInteger(value)
+                  ) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error('Debe ser un número entero'));
+                },
+              }),
+            ]}
           >
             <InputNumber min={0} max={100} style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item name="allocated_balance" label="Monto Límite">
+            <InputNumber
+              min={0}
+              style={{ width: '100%' }}
+              precision={2}
+              formatter={(value) => {
+                if (value === undefined || value === null || value === '')
+                  return '' as any;
+                const n = Number(
+                  String(value)
+                    .replace(/[^0-9.,-]/g, '')
+                    .replace('.', '')
+                    .replace(',', '.'),
+                );
+                if (Number.isNaN(n)) return value as any;
+                return new Intl.NumberFormat('es-AR', {
+                  style: 'currency',
+                  currency: 'ARS',
+                  minimumFractionDigits: 2,
+                }).format(n);
+              }}
+              parser={(value) => {
+                if (!value) return null as any;
+                const cleaned = value
+                  .replace(/[^0-9,-]/g, '')
+                  .replace('.', '')
+                  .replace(',', '.');
+                const num = parseFloat(cleaned);
+                return Number.isNaN(num) ? null : num;
+              }}
+            />
           </Form.Item>
           <Form.Item name="status" label="Estado" initialValue={STATUS.ACTIVE}>
             <Select

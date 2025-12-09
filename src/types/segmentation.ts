@@ -5,6 +5,7 @@ export type Segmentation = {
   name: string;
   label: string;
   discount_percentage_cap?: number;
+  allocated_balance?: number | null;
   status: ENTITY_STATUS;
   created_at?: string;
   updated_at?: string;
@@ -35,5 +36,6 @@ export type SegmentationPayload = {
   name: string;
   label: string;
   discount_percentage_cap?: number;
+  allocated_balance?: number | null;
   status?: ENTITY_STATUS;
 };

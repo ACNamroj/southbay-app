@@ -301,6 +301,10 @@ const Stores: React.FC = () => {
             density: true,
             setting: true,
           }}
+          columnsState={{
+            persistenceKey: 'stores-table-columns',
+            persistenceType: 'localStorage',
+          }}
           loading={loading}
           pagination={{
             current: pagination.current,
@@ -463,17 +467,32 @@ const Stores: React.FC = () => {
             name="name"
             label="Nombre de la tienda"
             rules={[
-              { required: true, message: 'Ingresa el nombre de la tienda' },
+              {
+                required: true,
+                whitespace: true,
+                message: 'Ingresa el nombre de la tienda',
+              },
+              { max: 100, message: 'Máximo 100 caracteres' },
             ]}
           >
-            <Input placeholder="nike.com.ar" />
+            <Input placeholder="nike.com.ar" maxLength={100} />
           </Form.Item>
           <Form.Item
             name="external_id"
             label="ID externo"
-            rules={[{ required: true, message: 'Ingresa el ID externo' }]}
+            rules={[
+              {
+                required: true,
+                whitespace: true,
+                message: 'Ingresa el ID externo',
+              },
+              { max: 100, message: 'Máximo 100 caracteres' },
+            ]}
           >
-            <Input placeholder="Identificador único de la tienda" />
+            <Input
+              placeholder="Identificador único de la tienda"
+              maxLength={100}
+            />
           </Form.Item>
           <Form.Item
             name="status"
