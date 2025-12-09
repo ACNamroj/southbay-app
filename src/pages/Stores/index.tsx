@@ -11,6 +11,7 @@ import {
   DownloadOutlined,
   EditOutlined,
   ExclamationCircleOutlined,
+  InfoCircleOutlined,
   PlusOutlined,
   UploadOutlined,
 } from '@ant-design/icons';
@@ -30,6 +31,7 @@ import {
   Select,
   Space,
   Tag,
+  Tooltip,
   Typography,
   Upload,
   message,
@@ -407,13 +409,43 @@ const Stores: React.FC = () => {
           </div>
           <ul style={{ marginTop: 6, paddingLeft: 18 }}>
             <li>
-              <strong>Nombre</strong>
+              <Tooltip
+                title="Nombre visible de la tienda. Máximo 100 carácteres."
+                placement="right"
+              >
+                <Space size={6}>
+                  <InfoCircleOutlined
+                    style={{ color: 'var(--brand-orange)' }}
+                  />
+                  <strong>Nombre</strong>
+                </Space>
+              </Tooltip>
             </li>
             <li>
-              <strong>ID Externo</strong>
+              <Tooltip
+                title="Identificar externo de la tienda. Único por tienda. Máximo 100 carácteres."
+                placement="right"
+              >
+                <Space size={6}>
+                  <InfoCircleOutlined
+                    style={{ color: 'var(--brand-orange)' }}
+                  />
+                  <strong>ID Externo</strong>
+                </Space>
+              </Tooltip>
             </li>
             <li>
-              <strong>Estado</strong>
+              <Tooltip
+                title="Estado de la tienda. Opciones: ACTIVE: Marca la tienda como 'Activa'. INACTIVE: Marca la tienda como 'Inactiva'."
+                placement="right"
+              >
+                <Space size={6}>
+                  <InfoCircleOutlined
+                    style={{ color: 'var(--brand-orange)' }}
+                  />
+                  <strong>Estado</strong>
+                </Space>
+              </Tooltip>
             </li>
           </ul>
           <Typography.Paragraph style={{ marginTop: 4 }}>

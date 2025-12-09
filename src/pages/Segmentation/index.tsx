@@ -158,7 +158,7 @@ const SegmentationPage: React.FC = () => {
       render: (_, r) => <b>{r.label || r.name}</b>,
     },
     {
-      title: 'Nombre técnico',
+      title: 'Nombre Técnico',
       dataIndex: 'name',
       sorter: (a, b) => compareStrings(a.name, b.name),
       hideInSearch: true,
@@ -394,7 +394,7 @@ const SegmentationPage: React.FC = () => {
           </Form.Item>
           <Form.Item
             name="name"
-            label="Nombre técnico"
+            label="Nombre Técnico"
             rules={[
               {
                 required: true,
