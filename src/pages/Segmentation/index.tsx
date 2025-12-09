@@ -379,7 +379,7 @@ const SegmentationPage: React.FC = () => {
               { max: 100, message: 'Máximo 100 caracteres' },
             ]}
           >
-            <Input maxLength={100} placeholder="Ej: EMPLEADO" />
+            <Input maxLength={100} placeholder="EMPLEADO" />
           </Form.Item>
           <Form.Item
             name="name"
@@ -393,7 +393,7 @@ const SegmentationPage: React.FC = () => {
               { max: 50, message: 'Máximo 50 caracteres' },
             ]}
           >
-            <Input maxLength={50} placeholder="Ej: EMPLOYEE" />
+            <Input maxLength={50} placeholder="EMPLOYEE" />
           </Form.Item>
           <Form.Item
             name="discount_percentage_cap"
