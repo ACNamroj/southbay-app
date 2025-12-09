@@ -1,4 +1,4 @@
-import { API_ENDPOINTS } from '@/constants';
+import { API_ENDPOINTS, DEFAULT_PAGE_SIZE } from '@/constants';
 import { apiRequest } from '@/services/client';
 import type { ApiListResponse } from '@/types/api';
 import type {
@@ -34,7 +34,7 @@ const mapStoreListResponse = (
 ): StoreListResult => {
   // Handle legacy array format
   if (Array.isArray(response)) {
-    const fallbackSize = (params.size ?? response.length) || 10;
+    const fallbackSize = (params.size ?? response.length) || DEFAULT_PAGE_SIZE;
     return {
       data: response,
       total: response.length,
@@ -53,7 +53,8 @@ const mapStoreListResponse = (
       ? Math.max(params.pageNumber - 1, 0)
       : 0;
   const pageZeroBased = response.page ?? inputPageZeroBased;
-  const size = (response.size ?? params.size ?? list.length) || 10;
+  const size =
+    (response.size ?? params.size ?? list.length) || DEFAULT_PAGE_SIZE;
 
   return {
     data: list,

@@ -1,4 +1,4 @@
-export type StoreStatus = 'ACTIVE' | 'INACTIVE' | 'DELETED';
+export type { StoreStatus } from '@/constants';
 
 export type Store = {
   id: number;

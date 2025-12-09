@@ -1,3 +1,8 @@
+import {
+  API_TIMEOUT,
+  DEFAULT_RETRY_ATTEMPTS,
+  DEFAULT_RETRY_DELAY_MS,
+} from '@/constants';
 import { getApiErrorMessage, normalizeApiError } from '@/utils/apiError';
 import type { RequestOptionsInit } from '@umijs/max';
 import { request } from '@umijs/max';
@@ -52,8 +57,8 @@ export const apiRequest = async <T>(
 ): Promise<T> => {
   const { retry, useGlobalErrorHandler = true, ...requestOptions } = options;
   const fullUrl = withBaseUrl(path);
-  const retryAttempts = retry?.retries ?? 1;
-  const delay = retry?.retryDelayMs ?? 300;
+  const retryAttempts = retry?.retries ?? DEFAULT_RETRY_ATTEMPTS;
+  const delay = retry?.retryDelayMs ?? DEFAULT_RETRY_DELAY_MS;
 
   let attempt = 0;
   let lastError: unknown;
@@ -62,6 +67,7 @@ export const apiRequest = async <T>(
     try {
       return await request<T>(fullUrl, {
         ...requestOptions,
+        timeout: requestOptions.timeout ?? API_TIMEOUT,
         skipErrorHandler: true,
       });
     } catch (error) {
