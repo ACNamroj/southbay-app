@@ -1,270 +1,260 @@
-import services from '@/services/demo';
 import {
-  ActionType,
-  FooterToolbar,
+  ENTITY_STATUS,
+  ENTITY_STATUS_LABELS,
+  STORE_STATUS_COLORS,
+} from '@/constants';
+import type {
+  SegmentationPayload,
+  UserAccountType,
+} from '@/types/segmentation';
+import {
+  DeleteOutlined,
+  EditOutlined,
+  ExclamationCircleOutlined,
+  PlusOutlined,
+} from '@ant-design/icons';
+import {
   PageContainer,
-  ProDescriptions,
-  ProDescriptionsItemProps,
+  ProColumns,
   ProTable,
+  type ActionType,
 } from '@ant-design/pro-components';
-import { Button, Divider, Drawer, message } from 'antd';
+import { useModel } from '@umijs/max';
+import {
+  Button,
+  Form,
+  Input,
+  InputNumber,
+  Modal,
+  Select,
+  Space,
+  Tag,
+  message,
+} from 'antd';
 import React, { useRef, useState } from 'react';
-import CreateForm from './components/CreateForm';
-import UpdateForm, { FormValueType } from './components/UpdateForm';
 
-const { addUser, queryUserList, deleteUser, modifyUser } =
-  services.UserController;
-
-/**
- * Add node
- * @param fields
- */
-const handleAdd = async (fields: API.UserInfo) => {
-  const hide = message.loading('Agregando');
-  try {
-    await addUser({ ...fields });
-    hide();
-    message.success('Agregado exitosamente');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('Error al agregar, por favor intenta nuevamente');
-    return false;
-  }
-};
-
-/**
- * Update node
- * @param fields
- */
-const handleUpdate = async (fields: FormValueType) => {
-  const hide = message.loading('Configurando');
-  try {
-    await modifyUser(
-      {
-        userId: fields.id || '',
-      },
-      {
-        name: fields.name || '',
-        nickName: fields.nickName || '',
-        email: fields.email || '',
-      },
-    );
-    hide();
-
-    message.success('Configuración aplicada exitosamente');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('Configuración fallida, por favor intenta nuevamente');
-    return false;
-  }
-};
-
-/**
- *  Delete node
- * @param selectedRows
- */
-const handleRemove = async (selectedRows: API.UserInfo[]) => {
-  const hide = message.loading('Borrando');
-  if (!selectedRows) return true;
-  try {
-    await deleteUser({
-      userId: selectedRows.find((row) => row.id)?.id || '',
-    });
-    hide();
-    message.success('Borrado exitoso, recargando');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('Ocurrió un error, por favor intenta nuevamente');
-    return false;
-  }
-};
-
-const TableList: React.FC<unknown> = () => {
-  const [createModalVisible, handleModalVisible] = useState<boolean>(false);
-  const [updateModalVisible, handleUpdateModalVisible] =
-    useState<boolean>(false);
-  const [stepFormValues, setStepFormValues] = useState({});
+const SegmentationPage: React.FC = () => {
+  const [form] = Form.useForm<SegmentationPayload>();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalSubmitting, setModalSubmitting] = useState(false);
+  const [editingItem, setEditingItem] = useState<UserAccountType | null>(null);
+  const searchRef = useRef('');
   const actionRef = useRef<ActionType>();
-  const [row, setRow] = useState<API.UserInfo>();
-  const [selectedRowsState, setSelectedRows] = useState<API.UserInfo[]>([]);
-  const columns: ProDescriptionsItemProps<API.UserInfo>[] = [
+  const { loadSegmentations, create, update, remove, loading, pagination } =
+    useModel('segmentation');
+
+  const openCreateModal = () => {
+    setEditingItem(null);
+    form.resetFields();
+    form.setFieldsValue({
+      status: ENTITY_STATUS.ACTIVE,
+      discount_percentage: 0,
+    });
+    setModalOpen(true);
+  };
+
+  const openEditModal = (item: UserAccountType) => {
+    setEditingItem(item);
+    form.setFieldsValue({
+      name: item.name,
+      label: item.label,
+      discount_percentage: item.discount_percentage ?? 0,
+      status: item.status,
+    });
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setEditingItem(null);
+    form.resetFields();
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const values = await form.validateFields();
+      setModalSubmitting(true);
+      if (editingItem) {
+        await update(editingItem.id, values);
+        message.success('Segmentación actualizada correctamente');
+      } else {
+        await create(values);
+        message.success('Segmentación creada correctamente');
+      }
+      closeModal();
+      actionRef.current?.reload();
+    } catch (_e) {
+      // handled by apiRequest globally
+    } finally {
+      setModalSubmitting(false);
+    }
+  };
+
+  const handleDelete = (item: UserAccountType) => {
+    Modal.confirm({
+      title: '¿Eliminar segmentación? ',
+      icon: <ExclamationCircleOutlined />,
+      content: (
+        <>
+          Esto eliminará la segmentación <b>{item.label || item.name}</b>.
+        </>
+      ),
+      okText: 'Eliminar',
+      okType: 'danger',
+      cancelText: 'Cancelar',
+      async onOk() {
+        await remove(item.id); // same behavior as storeService delete
+        message.success('Segmentación eliminada');
+        actionRef.current?.reload();
+      },
+    });
+  };
+
+  const columns: ProColumns<UserAccountType>[] = [
     {
-      title: 'Nombre',
+      title: 'Nombre de Segmentación',
+      dataIndex: 'label',
+      ellipsis: true,
+      render: (_, r) => r.label || r.name,
+    },
+    {
+      title: 'Nombre técnico',
       dataIndex: 'name',
-      tip: 'Buscar por nombre',
-      formItemProps: {
-        rules: [
-          {
-            required: true,
-            message: 'El nombre es requerido',
-          },
-        ],
-      },
+      hideInSearch: true,
     },
     {
-      title: 'Nombre de usuario',
-      dataIndex: 'nickName',
-      valueType: 'text',
+      title: 'Descuento (%)',
+      dataIndex: 'discount_percentage',
+      hideInSearch: true,
+      renderText: (v) => (v ?? 0).toString(),
     },
     {
-      title: 'Género',
-      dataIndex: 'gender',
-      hideInForm: true,
-      valueEnum: {
-        0: { text: 'M', status: 'MALE' },
-        1: { text: 'F', status: 'FEMALE' },
+      title: 'Estado',
+      dataIndex: 'status',
+      valueType: 'select',
+      fieldProps: {
+        options: Object.values(ENTITY_STATUS).map((s) => ({
+          label: ENTITY_STATUS_LABELS[s],
+          value: s,
+        })),
       },
+      render: (_, record) => (
+        <Tag color={STORE_STATUS_COLORS[record.status]}>
+          {ENTITY_STATUS_LABELS[record.status]}
+        </Tag>
+      ),
     },
     {
       title: 'Acciones',
-      dataIndex: 'option',
+      dataIndex: 'actions',
       valueType: 'option',
+      width: 120,
       render: (_, record) => (
-        <>
-          <a
-            onClick={() => {
-              handleUpdateModalVisible(true);
-              setStepFormValues(record);
-            }}
-          >
-            Configuración
-          </a>
-          <Divider type="vertical" />
-          <a href="">Suscribir a alertas</a>
-        </>
+        <Space>
+          <Button
+            type="text"
+            icon={<EditOutlined />}
+            onClick={() => openEditModal(record)}
+          />
+          <Button
+            type="text"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => handleDelete(record)}
+          />
+        </Space>
       ),
     },
   ];
 
   return (
     <PageContainer
-      header={{
-        title: 'Gestión de Segmentaciones',
-      }}
+      header={{ title: 'Segmentación de Usuarios' }}
+      loading={loading}
     >
-      <ProTable<API.UserInfo>
-        headerTitle="Buscador"
-        actionRef={actionRef}
+      <ProTable<UserAccountType>
+        headerTitle="Buscar segmentación"
         rowKey="id"
-        search={{
-          labelWidth: 120,
-        }}
+        actionRef={actionRef}
+        columns={columns}
+        search={false}
+        pagination={pagination}
         toolBarRender={() => [
+          <Input.Search
+            key="search"
+            placeholder="Buscar segmentación..."
+            allowClear
+            onSearch={(value) => {
+              searchRef.current = value;
+              actionRef.current?.reload();
+            }}
+          />,
           <Button
-            key="1"
+            key="create"
             type="primary"
-            onClick={() => handleModalVisible(true)}
+            icon={<PlusOutlined />}
+            onClick={openCreateModal}
           >
-            Nuevo
+            Agregar Segmentación
           </Button>,
         ]}
-        request={async (params, sorter, filter) => {
-          const { data, success } = await queryUserList({
-            ...params,
-            // FIXME: remove @ts-ignore
-            // @ts-ignore
-            sorter,
-            filter,
+        request={async (params) => {
+          const result = await loadSegmentations({
+            page: params.current,
+            size: params.pageSize,
+            name: searchRef.current,
           });
           return {
-            data: data?.list || [],
-            success,
+            data: result.data,
+            success: true,
+            total: result.total,
           };
         }}
-        columns={columns}
-        rowSelection={{
-          onChange: (_, selectedRows) => setSelectedRows(selectedRows),
-        }}
       />
-      {selectedRowsState?.length > 0 && (
-        <FooterToolbar
-          extra={
-            <div>
-              Seleccionado{' '}
-              <a style={{ fontWeight: 600 }}>{selectedRowsState.length}</a>{' '}
-              Ítem&nbsp;&nbsp;
-            </div>
-          }
-        >
-          <Button
-            onClick={async () => {
-              await handleRemove(selectedRowsState);
-              setSelectedRows([]);
-              actionRef.current?.reloadAndRest?.();
-            }}
-          >
-            Eliminar en lote
-          </Button>
-          <Button type="primary">Aprobar en lote</Button>
-        </FooterToolbar>
-      )}
-      <CreateForm
-        onCancel={() => handleModalVisible(false)}
-        modalVisible={createModalVisible}
-      >
-        <ProTable<API.UserInfo, API.UserInfo>
-          onSubmit={async (value) => {
-            const success = await handleAdd(value);
-            if (success) {
-              handleModalVisible(false);
-              if (actionRef.current) {
-                actionRef.current.reload();
-              }
-            }
-          }}
-          rowKey="id"
-          type="form"
-          columns={columns}
-        />
-      </CreateForm>
-      {stepFormValues && Object.keys(stepFormValues).length ? (
-        <UpdateForm
-          onSubmit={async (value) => {
-            const success = await handleUpdate(value);
-            if (success) {
-              handleUpdateModalVisible(false);
-              setStepFormValues({});
-              if (actionRef.current) {
-                actionRef.current.reload();
-              }
-            }
-          }}
-          onCancel={() => {
-            handleUpdateModalVisible(false);
-            setStepFormValues({});
-          }}
-          updateModalVisible={updateModalVisible}
-          values={stepFormValues}
-        />
-      ) : null}
 
-      <Drawer
-        width={600}
-        open={!!row}
-        onClose={() => {
-          setRow(undefined);
-        }}
-        closable={false}
+      <Modal
+        title={editingItem ? 'Editar Segmentación' : 'Agregar Segmentación'}
+        open={modalOpen}
+        onCancel={closeModal}
+        confirmLoading={modalSubmitting}
+        onOk={handleSubmit}
+        okText={editingItem ? 'Guardar cambios' : 'Crear'}
+        destroyOnHidden
       >
-        {row?.name && (
-          <ProDescriptions<API.UserInfo>
-            column={2}
-            title={row?.name}
-            request={async () => ({
-              data: row || {},
-            })}
-            params={{
-              id: row?.name,
-            }}
-            columns={columns}
-          />
-        )}
-      </Drawer>
+        <Form form={form} layout="vertical">
+          <Form.Item
+            name="label"
+            label="Nombre de Segmentación"
+            rules={[{ required: true, message: 'Ingresa el nombre' }]}
+          >
+            <Input maxLength={80} placeholder="Ej: Empleados" />
+          </Form.Item>
+          <Form.Item
+            name="name"
+            label="Nombre técnico"
+            rules={[{ required: true, message: 'Ingresa el nombre técnico' }]}
+          >
+            <Input maxLength={80} placeholder="Ej: EMPLEADOS" />
+          </Form.Item>
+          <Form.Item name="discount_percentage" label="Descuento (%)">
+            <InputNumber min={0} max={100} style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item
+            name="status"
+            label="Estado"
+            initialValue={ENTITY_STATUS.ACTIVE}
+          >
+            <Select
+              options={Object.values(ENTITY_STATUS).map((s) => ({
+                label: ENTITY_STATUS_LABELS[s],
+                value: s,
+              }))}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
     </PageContainer>
   );
 };
 
-export default TableList;
+export default SegmentationPage;

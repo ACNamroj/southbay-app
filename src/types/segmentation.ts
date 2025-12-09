@@ -1,15 +1,16 @@
-export type { EntityStatus } from '@/constants';
+import type { EntityStatus } from '@/constants';
 
-export type Store = {
+export type UserAccountType = {
   id: number;
-  external_id: string;
   name: string;
+  label: string;
+  discount_percentage?: number;
   status: EntityStatus;
   created_at?: string;
   updated_at?: string;
 };
 
-export type StoreListParams = {
+export type SegmentationListParams = {
   page?: number;
   pageNumber?: number;
   size?: number;
@@ -20,8 +21,8 @@ export type StoreListParams = {
   status?: EntityStatus | EntityStatus[];
 };
 
-export type StoreListResult = {
-  data: Store[];
+export type SegmentationListResult = {
+  data: UserAccountType[];
   total: number;
   page: number;
   page_size: number;
@@ -30,8 +31,9 @@ export type StoreListResult = {
   last?: boolean;
 };
 
-export type StorePayload = {
-  external_id: string;
+export type SegmentationPayload = {
   name: string;
+  label: string;
+  discount_percentage?: number;
   status?: EntityStatus;
 };

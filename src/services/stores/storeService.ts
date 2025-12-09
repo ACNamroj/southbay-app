@@ -2,11 +2,11 @@ import { API_ENDPOINTS, DEFAULT_PAGE_SIZE } from '@/constants';
 import { apiRequest } from '@/services/client';
 import type { ApiListResponse } from '@/types/api';
 import type {
+  EntityStatus,
   Store,
   StoreListParams,
   StoreListResult,
   StorePayload,
-  StoreStatus,
 } from '@/types/store';
 import { getApiErrorMessage } from '@/utils/apiError';
 
@@ -66,7 +66,7 @@ const mapStoreListResponse = (
   };
 };
 
-const normalizeStatusParam = (status?: StoreStatus | StoreStatus[]) => {
+const normalizeStatusParam = (status?: EntityStatus | EntityStatus[]) => {
   if (!status) {
     return undefined;
   }

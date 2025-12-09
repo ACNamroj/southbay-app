@@ -1,7 +1,7 @@
 import {
-  STORE_STATUS,
+  ENTITY_STATUS,
+  ENTITY_STATUS_LABELS,
   STORE_STATUS_COLORS,
-  STORE_STATUS_LABELS,
 } from '@/constants';
 import type { Store, StorePayload } from '@/types/store';
 import { validateStoresUploadFile } from '@/utils/xlsxValidation';
@@ -62,7 +62,7 @@ const Stores: React.FC = () => {
   const openCreateModal = () => {
     setEditingStore(null);
     form.resetFields();
-    form.setFieldsValue({ status: STORE_STATUS.ACTIVE });
+    form.setFieldsValue({ status: ENTITY_STATUS.ACTIVE });
     setModalOpen(true);
   };
 
@@ -239,12 +239,12 @@ const Stores: React.FC = () => {
       title: 'Estado',
       dataIndex: 'status',
       sorter: (a, b) =>
-        STORE_STATUS_LABELS[a.status].localeCompare(
-          STORE_STATUS_LABELS[b.status],
+        ENTITY_STATUS_LABELS[a.status].localeCompare(
+          ENTITY_STATUS_LABELS[b.status],
         ),
       render: (_, record) => (
         <Tag color={STORE_STATUS_COLORS[record.status]}>
-          {STORE_STATUS_LABELS[record.status]}
+          {ENTITY_STATUS_LABELS[record.status]}
         </Tag>
       ),
     },
@@ -321,7 +321,11 @@ const Stores: React.FC = () => {
           rowKey="id"
           actionRef={actionRef}
           search={false}
-          options={false}
+          options={{
+            reload: true,
+            density: true,
+            setting: true,
+          }}
           loading={loading}
           pagination={{
             current: pagination.current,
@@ -356,11 +360,11 @@ const Stores: React.FC = () => {
                         : compareStrings(b.external_id, a.external_id);
                     case 'status':
                       return order === 'ascend'
-                        ? STORE_STATUS_LABELS[a.status].localeCompare(
-                            STORE_STATUS_LABELS[b.status],
+                        ? ENTITY_STATUS_LABELS[a.status].localeCompare(
+                            ENTITY_STATUS_LABELS[b.status],
                           )
-                        : STORE_STATUS_LABELS[b.status].localeCompare(
-                            STORE_STATUS_LABELS[a.status],
+                        : ENTITY_STATUS_LABELS[b.status].localeCompare(
+                            ENTITY_STATUS_LABELS[a.status],
                           );
                     case 'created_at':
                       return order === 'ascend'
@@ -504,12 +508,12 @@ const Stores: React.FC = () => {
             <Select
               options={[
                 {
-                  label: STORE_STATUS_LABELS[STORE_STATUS.ACTIVE],
-                  value: STORE_STATUS.ACTIVE,
+                  label: ENTITY_STATUS_LABELS[ENTITY_STATUS.ACTIVE],
+                  value: ENTITY_STATUS.ACTIVE,
                 },
                 {
-                  label: STORE_STATUS_LABELS[STORE_STATUS.INACTIVE],
-                  value: STORE_STATUS.INACTIVE,
+                  label: ENTITY_STATUS_LABELS[ENTITY_STATUS.INACTIVE],
+                  value: ENTITY_STATUS.INACTIVE,
                 },
               ]}
             />

@@ -26,27 +26,27 @@ Last updated: 2025-12-02
 
 1. Install dependencies
 
-```bash
-pnpm install
-```
+   ```bash
+   pnpm install
+   ```
 
 2. Start the dev server
 
-```bash
-pnpm dev
-# or
-pnpm start
-```
+   ```bash
+   pnpm dev
+   # or
+   pnpm start
+   ```
 
-Umi will start the app on http://localhost:8000 (or the next available port).
+   Umi will start the app on http://localhost:8000 (or the next available port).
 
 3. Build for production
 
-```bash
-pnpm build
-```
+   ```bash
+   pnpm build
+   ```
 
-The production build is output to the `dist/` directory by Umi.
+   The production build is output to the `dist/` directory by Umi.
 
 ## Scripts
 
@@ -70,10 +70,10 @@ Run with pnpm, for example: `pnpm dev`, `pnpm build`, `pnpm format`.
 ## Environment Variables
 
 - `BASE_URL`: Base URL for backend API requests.
-  - Used in `src/services/client.ts`.
-  - In development it is defined via Umi config: `.umirc.ts -> define: { 'process.env.BASE_URL': 'http://localhost:8080' }`.
-  - For other environments, set a value at build time using Umi's `define` config or environment injection. Add an environment-specific define in `.umirc.*.ts` or inject via CI pipelines.
-  - `.env.example` shows expected keys; create `.env.local` (not committed) for local overrides and ensure CI/CD sets `BASE_URL` for staging/production.
+- Used in `src/services/client.ts`.
+- In development it is defined via Umi config: `.umirc.ts -> define: { 'process.env.BASE_URL': 'http://localhost:8080' }`.
+- For other environments, set a value at build time using Umi's `define` config or environment injection. Add an environment-specific define in `.umirc.*.ts` or inject via CI pipelines.
+- `.env.example` shows expected keys; create `.env.local` (not committed) for local overrides and ensure CI/CD sets `BASE_URL` for staging/production.
 
 Other common variables:
 
@@ -125,7 +125,7 @@ During development, Umi serves mock routes from the `mock/` directory. This allo
 
 ## Testing
 
-Vitest + React Testing Library are configured. Run locally:
+Vitest + React Testing Library is configured. Run locally:
 
 - `pnpm test` – run once in CI mode.
 - `pnpm test:watch` – watch mode.
@@ -141,7 +141,7 @@ Vitest + React Testing Library are configured. Run locally:
 ## Design System
 
 - Theme tokens live in `src/theme/tokens.ts` (JS) and `src/theme/variables.less` (CSS variables). Ant Design pulls from `antdThemeTokens` in `.umirc.ts`; styles use CSS variables via `src/global.less`.
-- Spacing scale: `--space-xxs` (4px) to `--space-xl` (32px). Typography scale: base 16px with heading sizes (`--heading-1-size` 32px, `--heading-2-size` 24px, etc.).
+- Spacing scale: `--space-xxs` (4px) to `--space-xl` (32px). Typography scale: base 16px with heading sizes ( `--heading-1-size` 32px, `--heading-2-size` 24px, etc.).
 - Use `var(--primary-color)`, `var(--text-color)`, and spacing/typography tokens for buttons/forms/tables to avoid ad-hoc values.
 - Shared components belong under `src/components/`; add Storybook (optional) if you want interactive docs for those components.
 
