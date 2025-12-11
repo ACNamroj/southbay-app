@@ -306,6 +306,7 @@ const Stores: React.FC = () => {
             reload: true,
             density: true,
             setting: true,
+            fullScreen: true,
           }}
           columnsState={{
             persistenceKey: 'stores-table-columns',

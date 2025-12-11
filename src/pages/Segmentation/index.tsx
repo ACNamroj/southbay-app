@@ -271,6 +271,7 @@ const SegmentationPage: React.FC = () => {
             reload: true,
             density: true,
             setting: true,
+            fullScreen: true,
           }}
           columnsState={{
             persistenceKey: 'segmentation-table-columns',
