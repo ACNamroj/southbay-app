@@ -392,10 +392,10 @@ const UsersPage: React.FC = () => {
                 message: 'Ingresa el email',
               },
               { type: 'email', message: 'Ingresa un email válido' },
-              { max: 100, message: 'Máximo 100 caracteres' },
+              { max: 255, message: 'Máximo 255 caracteres' },
             ]}
           >
-            <Input placeholder="usuario@southbay.com" maxLength={100} />
+            <Input placeholder="usuario@southbay.com" maxLength={255} />
           </Form.Item>
           <Form.Item
             name="roles"
@@ -459,17 +459,17 @@ const UsersPage: React.FC = () => {
                 whitespace: true,
                 message: 'Ingresa el número de documento',
               },
-              { max: 50, message: 'Máximo 50 caracteres' },
+              { max: 20, message: 'Máximo 20 caracteres' },
             ]}
           >
-            <Input placeholder="Documento" maxLength={50} />
+            <Input placeholder="Documento" maxLength={20} />
           </Form.Item>
           <Form.Item
             name="phone_number"
             label="Teléfono"
-            rules={[{ max: 30, message: 'Máximo 30 caracteres' }]}
+            rules={[{ max: 20, message: 'Máximo 20 caracteres' }]}
           >
-            <Input placeholder="Teléfono (opcional)" maxLength={30} />
+            <Input placeholder="Teléfono (opcional)" maxLength={20} />
           </Form.Item>
         </Form>
       </Modal>
