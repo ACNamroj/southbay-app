@@ -21,7 +21,8 @@ export const API_ENDPOINTS = {
     ME: '/v1/users/me',
     LIST: '/v1/users',
     CREATE: '/v1/users',
-    UPDATE: (id: number) => `/v1/users/${id}`,
+    // Update is a body-based PUT; backend expects the ID inside the request body.
+    UPDATE: '/v1/users',
     DELETE: (id: number) => `/v1/users/${id}`,
     PASSWORD: {
       CHANGE: '/v1/users/password',

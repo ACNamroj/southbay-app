@@ -116,9 +116,9 @@ export const updateUser = async (
   id: number,
   payload: UserPayload,
 ): Promise<User> => {
-  return apiRequest<User>(API_ENDPOINTS.USERS.UPDATE(id), {
+  return apiRequest<User>(API_ENDPOINTS.USERS.UPDATE, {
     method: 'PUT',
-    data: payload,
+    data: { id, ...payload },
     retry: { retries: 0 },
   });
 };
