@@ -274,7 +274,7 @@ const UsersPage: React.FC = () => {
             icon={<PlusOutlined />}
             onClick={openCreateModal}
           >
-            Crear usuario
+            Agregar usuario
           </Button>,
         ],
       }}
@@ -372,11 +372,11 @@ const UsersPage: React.FC = () => {
       </Card>
 
       <Modal
-        title={editingUser ? 'Editar usuario' : 'Crear usuario'}
+        title={editingUser ? 'Editar usuario' : 'Agregar usuario'}
         open={modalOpen}
         onCancel={closeModal}
         onOk={handleSubmit}
-        okText={editingUser ? 'Guardar cambios' : 'Crear usuario'}
+        okText={editingUser ? 'Guardar cambios' : 'Agregar usuario'}
         cancelText="Cancelar"
         confirmLoading={modalSubmitting}
         destroyOnHidden
