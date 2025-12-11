@@ -294,7 +294,7 @@ const Stores: React.FC = () => {
             icon={<PlusOutlined />}
             onClick={openCreateModal}
           >
-            Cargar una tienda
+            Agregar tienda
           </Button>,
         ],
       }}
