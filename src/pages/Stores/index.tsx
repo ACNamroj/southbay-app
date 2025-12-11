@@ -16,10 +16,10 @@ import {
   UploadOutlined,
 } from '@ant-design/icons';
 import {
+  type ActionType,
   PageContainer,
   ProColumns,
   ProTable,
-  type ActionType,
 } from '@ant-design/pro-components';
 import { useModel } from '@umijs/max';
 import {
@@ -27,6 +27,7 @@ import {
   Card,
   Form,
   Input,
+  message,
   Modal,
   Select,
   Space,
@@ -34,7 +35,6 @@ import {
   Tooltip,
   Typography,
   Upload,
-  message,
   type UploadFile,
 } from 'antd';
 import React, { useRef, useState } from 'react';
@@ -98,7 +98,7 @@ const Stores: React.FC = () => {
       }
       closeModal();
       actionRef.current?.reload();
-    } catch (error) {
+    } catch (_) {
       // handled by apiRequest
     } finally {
       setModalSubmitting(false);
@@ -127,7 +127,7 @@ const Stores: React.FC = () => {
         'Archivo recibido. Recibirás el reporte por correo cuando finalice el procesamiento.',
       );
       closeUploadModal();
-    } catch (_e) {
+    } catch (_) {
       // handled by global api handler
     } finally {
       setUploading(false);
@@ -184,12 +184,10 @@ const Stores: React.FC = () => {
   };
 
   const handleSearch = (value: string) => {
-    const nextValue = value.trim();
-    searchRef.current = nextValue;
+    searchRef.current = value.trim();
     actionRef.current?.reload();
   };
 
-  // Map our selected File[] into Upload's expected list to keep UI in sync
   const uploadUiFileList: UploadFile[] = fileList.map((f, idx) => ({
     uid: String(idx),
     name: f.name,
@@ -469,9 +467,11 @@ const Stores: React.FC = () => {
               await validateStoresUploadFile(file as File);
               setFileList([file as File]);
               message.success('Archivo válido listo para subir');
-            } catch (err: any) {
+            } catch (error) {
               setFileList([]);
-              message.error(String(err?.message ?? err ?? 'Archivo inválido'));
+              message.error(
+                String(error.message ?? error ?? 'Archivo inválido'),
+              );
             }
             // Prevent automatic upload, we handle it on modal OK
             return false;
