@@ -1,3 +1,4 @@
+import { API_ENDPOINTS } from '@/constants';
 import { apiRequest } from '@/services/client';
 import type { ApiMessageResponse } from '@/types/api';
 import type {
@@ -9,18 +10,21 @@ import type {
 export const initiatePasswordReset = async (
   body: PasswordResetRequest,
 ): Promise<ApiMessageResponse> => {
-  return apiRequest<ApiMessageResponse>('/auth/initiate/password/reset', {
-    method: 'POST',
-    data: body,
-    retry: { retries: 0 },
-  });
+  return apiRequest<ApiMessageResponse>(
+    API_ENDPOINTS.AUTH.INITIATE_PASSWORD_RESET,
+    {
+      method: 'POST',
+      data: body,
+      retry: { retries: 0 },
+    },
+  );
 };
 
 export const verifyPasswordResetToken = async (
   resetToken: string,
 ): Promise<PasswordResetVerificationResponse> => {
   return apiRequest<PasswordResetVerificationResponse>(
-    '/auth/password/reset/verify-token',
+    API_ENDPOINTS.AUTH.VERIFY_PASSWORD_RESET_TOKEN,
     {
       method: 'POST',
       data: {
@@ -34,7 +38,7 @@ export const verifyPasswordResetToken = async (
 export const resetPassword = async (
   body: PasswordResetSubmitRequest,
 ): Promise<ApiMessageResponse> => {
-  return apiRequest<ApiMessageResponse>('/auth/password/reset', {
+  return apiRequest<ApiMessageResponse>(API_ENDPOINTS.AUTH.PASSWORD_RESET, {
     method: 'PATCH',
     data: body,
     retry: { retries: 0 },
