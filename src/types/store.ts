@@ -16,7 +16,6 @@ export type StoreListParams = {
   pageSize?: number;
   page_size?: number;
   name?: string;
-  search?: string;
   status?: ENTITY_STATUS | ENTITY_STATUS[];
 };
 

@@ -79,7 +79,7 @@ export const fetchStores = async (
       ? Math.max(params.pageNumber - 1, 0)
       : 0;
 
-  const nameParam = params.name ?? params.search;
+  const nameParam = params.name;
 
   const requestParams: Record<string, unknown> = {
     page: pageZeroBased,
