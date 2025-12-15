@@ -110,7 +110,7 @@ const ResetPassword: React.FC = () => {
         if (!mounted) {
           return;
         }
-        setValidatedToken(response.reset_token);
+        setValidatedToken(urlToken);
         const expirationDate = ensureBuenosAiresDate(response.expires_at);
         setExpiresAt(expirationDate);
         setIsExpired(expirationDate.getTime() <= Date.now());
