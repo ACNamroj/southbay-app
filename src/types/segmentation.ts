@@ -4,8 +4,9 @@ export type Segmentation = {
   id?: number;
   name: string;
   label: string;
-  discount_percentage_cap?: number;
+  discount_percentage_cap: number;
   allocated_balance?: number | null;
+  monthly_recharge_enabled: boolean;
   status: ENTITY_STATUS;
   created_at?: string;
   updated_at?: string;
@@ -35,9 +36,8 @@ export type SegmentationListResult = {
 export type SegmentationPayload = {
   name: string;
   label: string;
-  discount_percentage_cap?: number;
-  // Kept for update API compatibility; backend uses "discount_percentage" on update.
-  discount_percentage?: number;
+  discount_percentage_cap: number;
   allocated_balance?: number | null;
+  monthly_recharge_enabled: boolean;
   status?: ENTITY_STATUS;
 };
