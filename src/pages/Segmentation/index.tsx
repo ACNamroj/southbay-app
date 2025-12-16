@@ -27,6 +27,7 @@ import {
   Modal,
   Select,
   Space,
+  Switch,
   Tag,
   message,
 } from 'antd';
@@ -48,6 +49,7 @@ const SegmentationPage: React.FC = () => {
     form.setFieldsValue({
       status: STATUS.ACTIVE,
       discount_percentage_cap: 0,
+      monthly_recharge_enabled: false,
     });
     setModalOpen(true);
   };
@@ -59,6 +61,7 @@ const SegmentationPage: React.FC = () => {
       label: item.label,
       discount_percentage_cap: item.discount_percentage_cap ?? 0,
       allocated_balance: item.allocated_balance ?? null,
+      monthly_recharge_enabled: item.monthly_recharge_enabled ?? false,
       status: item.status,
     });
     setModalOpen(true);
@@ -75,8 +78,6 @@ const SegmentationPage: React.FC = () => {
       const values = await form.validateFields();
       setModalSubmitting(true);
       if (editingItem) {
-        // Only block when the ID is truly missing (undefined or null).
-        // Allow numeric 0 or other falsy-but-valid IDs.
         if (editingItem.id === undefined || editingItem.id === null) {
           message.error('No se puede actualizar: ID no disponible');
           return;
@@ -89,7 +90,7 @@ const SegmentationPage: React.FC = () => {
       }
       closeModal();
       actionRef.current?.reload();
-    } catch (_e) {
+    } catch (_) {
       // handled by apiRequest globally
     } finally {
       setModalSubmitting(false);
@@ -102,11 +103,16 @@ const SegmentationPage: React.FC = () => {
     actionRef.current?.reload();
   };
 
-  // Helpers: sorting and formatting
   const compareNumbers = (a?: number, b?: number) => {
-    if (a === undefined && b === undefined) return 0;
-    if (a === undefined) return 1;
-    if (b === undefined) return -1;
+    if (a === undefined && b === undefined) {
+      return 0;
+    }
+    if (a === undefined) {
+      return 1;
+    }
+    if (b === undefined) {
+      return -1;
+    }
     return a - b;
   };
 
@@ -470,6 +476,13 @@ const SegmentationPage: React.FC = () => {
                 return Number.isNaN(num) ? null : num;
               }}
             />
+          </Form.Item>
+          <Form.Item
+            name="monthly_recharge_enabled"
+            label="Recarga mensual habilitada"
+            valuePropName="checked"
+          >
+            <Switch />
           </Form.Item>
           <Form.Item name="status" label="Estado" initialValue={STATUS.ACTIVE}>
             <Select

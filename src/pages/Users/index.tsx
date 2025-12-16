@@ -143,7 +143,7 @@ const UsersPage: React.FC = () => {
       }
       closeModal();
       actionRef.current?.reload();
-    } catch (_e) {
+    } catch (_) {
       // handled by global api handler
     } finally {
       setModalSubmitting(false);
@@ -169,7 +169,7 @@ const UsersPage: React.FC = () => {
           await remove(user.id as number);
           message.success('Usuario eliminado');
           actionRef.current?.reload();
-        } catch (_error) {
+        } catch (_) {
           // handled globally
         }
       },

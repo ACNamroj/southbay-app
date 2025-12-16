@@ -155,7 +155,7 @@ export const downloadStores = async (): Promise<{
     let filename = rawFilename;
     try {
       filename = decodeURIComponent(rawFilename);
-    } catch (_e) {
+    } catch (_) {
       // keep raw filename if decode fails
     }
 
