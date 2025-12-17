@@ -4,6 +4,7 @@ export type Store = {
   id: number;
   external_id: string;
   name: string;
+  type: string;
   status: ENTITY_STATUS;
   created_at?: string;
   updated_at?: string;
@@ -32,5 +33,6 @@ export type StoreListResult = {
 export type StorePayload = {
   external_id: string;
   name: string;
+  type: string;
   status?: ENTITY_STATUS;
 };

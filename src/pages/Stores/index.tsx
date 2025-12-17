@@ -74,6 +74,7 @@ const Stores: React.FC = () => {
     form.setFieldsValue({
       name: store.name,
       external_id: store.external_id,
+      type: store.type,
       status: store.status,
     });
     setModalOpen(true);
@@ -135,7 +136,7 @@ const Stores: React.FC = () => {
   };
 
   const handleDownloadTemplate = () => {
-    const data = [['Nombre', 'ID Externo', 'Estado']];
+    const data = [['Nombre', 'ID Externo', 'Tipo', 'Estado']];
     const ws = XLSX.utils.aoa_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Tiendas');
@@ -177,7 +178,9 @@ const Stores: React.FC = () => {
       window.URL.revokeObjectURL(url);
       message.success('Listado descargado');
     } catch (error) {
-      message.error(error?.message || 'No se pudo descargar el listado');
+      message.error(
+        String((error as any)?.message || 'No se pudo descargar el listado'),
+      );
     } finally {
       setExportLoading(false);
     }
@@ -209,6 +212,13 @@ const Stores: React.FC = () => {
       title: 'ID Externo',
       dataIndex: 'external_id',
       sorter: (a, b) => compareStrings(a.external_id, b.external_id),
+      ellipsis: true,
+      responsive: ['sm', 'md', 'lg', 'xl'],
+    },
+    {
+      title: 'Tipo',
+      dataIndex: 'type',
+      sorter: (a, b) => compareStrings(a.type, b.type),
       ellipsis: true,
       responsive: ['sm', 'md', 'lg', 'xl'],
     },
@@ -435,6 +445,19 @@ const Stores: React.FC = () => {
             </li>
             <li>
               <Tooltip
+                title="Tipo de tienda. Valores de ejemplo: NSO, NVS"
+                placement="right"
+              >
+                <Space size={6}>
+                  <InfoCircleOutlined
+                    style={{ color: 'var(--brand-orange)' }}
+                  />
+                  <strong>Tipo</strong>
+                </Space>
+              </Tooltip>
+            </li>
+            <li>
+              <Tooltip
                 title="Estado de la tienda. Opciones: ACTIVE: Marca la tienda como 'Activa'. INACTIVE: Marca la tienda como 'Inactiva'."
                 placement="right"
               >
@@ -470,9 +493,9 @@ const Stores: React.FC = () => {
               message.success('Archivo válido listo para subir');
             } catch (error) {
               setFileList([]);
-              message.error(
-                String(error.message ?? error ?? 'Archivo inválido'),
-              );
+              const msg =
+                (error as any)?.message ?? error ?? 'Archivo inválido';
+              message.error(String(msg));
             }
             // Prevent automatic upload, we handle it on modal OK
             return false;
@@ -534,6 +557,13 @@ const Stores: React.FC = () => {
               placeholder="Identificador único de la tienda"
               maxLength={100}
             />
+          </Form.Item>
+          <Form.Item
+            name="type"
+            label="Tipo"
+            rules={[{ required: false, message: 'Ingresa el tipo de tienda' }]}
+          >
+            <Input placeholder="Tipo de tienda" maxLength={100} />
           </Form.Item>
           <Form.Item
             name="status"

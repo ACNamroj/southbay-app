@@ -1,15 +1,18 @@
-// Utility to validate the Stores upload XLSX file
-// Rules:
-// - File must be .xlsx
-// - Must contain first worksheet with headers: Nombre, ID Externo, Estado (any order not allowed)
-// - Must contain at least one data row
 import * as XLSX from 'xlsx';
-
-const REQUIRED_HEADERS = ['Nombre', 'ID Externo', 'Estado'];
 
 const normalize = (s?: string) => (s ?? '').trim().toLowerCase();
 
-export async function validateStoresUploadFile(file: File): Promise<void> {
+/**
+ * Utility to validate an upload XLSX file
+ * Rules:
+ * - File must be .xlsx
+ * - Must contain the first worksheet with the given headers in the given order
+ * - Must contain at least one data row
+ */
+export async function validateStoresUploadFile(
+  file: File,
+  requiredHeaders: string[],
+): Promise<void> {
   const name = file?.name || '';
   const extOk = /\.xlsx$/i.test(name);
   const mimeOk =
@@ -43,14 +46,15 @@ export async function validateStoresUploadFile(file: File): Promise<void> {
   const headerRow = (rows[0] || []).map((c) => String(c ?? ''));
   const headersNorm = headerRow.map((h) => normalize(h));
 
-  const expectedNorm = REQUIRED_HEADERS.map((h) => normalize(h));
+  const expectedNorm = requiredHeaders.map((h) => normalize(h));
   const matches =
     headersNorm.length >= expectedNorm.length &&
     expectedNorm.every((h, idx) => headersNorm[idx] === h);
 
   if (!matches) {
+    const expectedHuman = requiredHeaders.join(', ');
     throw new Error(
-      'Encabezados inválidos. Se requieren las columnas: Nombre, ID Externo, Estado (en ese orden).',
+      `Encabezados inválidos. Se requieren las columnas: ${expectedHuman} (en ese orden).`,
     );
   }
 
