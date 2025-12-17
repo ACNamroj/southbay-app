@@ -116,6 +116,22 @@ const BeneficiariesPage: React.FC = () => {
     [segmentations],
   );
 
+  const mergedSegmentationOptions = useMemo(() => {
+    const options = [...segmentationOptions];
+    if (editing) {
+      const value =
+        (editing as any).segmentation?.name ??
+        (editing as any).segmentation?.label;
+      const label =
+        (editing as any).segmentation?.label ??
+        (editing as any).segmentation?.name;
+      if (value && !options.some((o) => o.value === value)) {
+        options.unshift({ value, label });
+      }
+    }
+    return options;
+  }, [editing, segmentationOptions]);
+
   const openCreateModal = () => {
     setEditing(null);
     form.resetFields();
@@ -528,7 +544,7 @@ const BeneficiariesPage: React.FC = () => {
             <Select
               showSearch
               placeholder="Seleccione..."
-              options={segmentationOptions}
+              options={mergedSegmentationOptions}
               onDropdownVisibleChange={(open) => {
                 if (open && (!segmentations || segmentations.length === 0)) {
                   // Load first page
