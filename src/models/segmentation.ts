@@ -37,7 +37,6 @@ const useSegmentationModel = () => {
             (params as any).pageSize ??
             pagination.pageSize,
           name: params.name ?? lastQueryRef.current.name,
-          search: params.search ?? lastQueryRef.current.search,
           status: params.status ?? lastQueryRef.current.status,
         };
         const result = await fetchSegmentations(query);

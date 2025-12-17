@@ -40,6 +40,8 @@ import {
 import React, { useRef, useState } from 'react';
 import * as XLSX from 'xlsx';
 
+const REQUIRED_HEADERS = ['Nombre', 'ID Externo', 'Tipo', 'Estado'];
+
 const Stores: React.FC = () => {
   const [form] = Form.useForm<StorePayload>();
   const [modalOpen, setModalOpen] = useState(false);
@@ -140,7 +142,7 @@ const Stores: React.FC = () => {
     const ws = XLSX.utils.aoa_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Tiendas');
-    XLSX.writeFile(wb, 'stores-upload.xlsx');
+    XLSX.writeFile(wb, 'store-upload.xlsx');
   };
 
   const confirmDelete = (store: Store) => {
@@ -171,7 +173,7 @@ const Stores: React.FC = () => {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = filename || 'stores.xlsx';
+      link.download = filename || 'store.xlsx';
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -237,14 +239,14 @@ const Stores: React.FC = () => {
       ),
     },
     {
-      title: 'Fecha de creación',
+      title: 'Fecha de Creación',
       dataIndex: 'created_at',
       sorter: (a, b) => compareDates(a.created_at, b.created_at),
       responsive: ['lg', 'xl'],
       render: (_, record) => <span>{formatDateTime(record.created_at)}</span>,
     },
     {
-      title: 'Fecha de actualización',
+      title: 'Fecha de Actualización',
       dataIndex: 'updated_at',
       sorter: (a, b) => compareDates(a.updated_at, b.updated_at),
       responsive: ['lg', 'xl'],
@@ -294,7 +296,7 @@ const Stores: React.FC = () => {
             icon={<UploadOutlined />}
             onClick={openUploadModal}
           >
-            Cargar listado
+            Cargar Listado
           </Button>,
           <Button
             key="new"
@@ -302,7 +304,7 @@ const Stores: React.FC = () => {
             icon={<PlusOutlined />}
             onClick={openCreateModal}
           >
-            Agregar tienda
+            Agregar Tienda
           </Button>,
         ],
       }}
@@ -319,7 +321,7 @@ const Stores: React.FC = () => {
             fullScreen: true,
           }}
           columnsState={{
-            persistenceKey: 'stores-table-columns',
+            persistenceKey: 'store-table-columns',
             persistenceType: 'localStorage',
           }}
           scroll={{ x: 'max-content' }}
@@ -488,7 +490,7 @@ const Stores: React.FC = () => {
           accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           beforeUpload={async (file) => {
             try {
-              await validateStoresUploadFile(file as File);
+              await validateStoresUploadFile(file as File, REQUIRED_HEADERS);
               setFileList([file as File]);
               message.success('Archivo válido listo para subir');
             } catch (error) {

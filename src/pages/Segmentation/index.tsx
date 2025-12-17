@@ -214,14 +214,14 @@ const SegmentationPage: React.FC = () => {
       ),
     },
     {
-      title: 'Fecha de creación',
+      title: 'Fecha de Creación',
       dataIndex: 'created_at',
       sorter: (a, b) => compareDates(a.created_at, b.created_at),
       responsive: ['lg', 'xl'],
       render: (_, record) => <span>{formatDateTime(record.created_at)}</span>,
     },
     {
-      title: 'Fecha de actualización',
+      title: 'Fecha de Actualización',
       dataIndex: 'updated_at',
       sorter: (a, b) => compareDates(a.updated_at, b.updated_at),
       responsive: ['lg', 'xl'],
@@ -445,7 +445,7 @@ const SegmentationPage: React.FC = () => {
               min={0}
               style={{ width: '100%' }}
               precision={2}
-              formatter={(value) => {
+              formatter={(value: any) => {
                 if (value === undefined || value === null || value === '') {
                   return '' as any;
                 }
@@ -464,7 +464,7 @@ const SegmentationPage: React.FC = () => {
                   minimumFractionDigits: 2,
                 }).format(n);
               }}
-              parser={(value) => {
+              parser={(value: any) => {
                 if (!value) {
                   return null as any;
                 }

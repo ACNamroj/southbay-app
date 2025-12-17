@@ -2,33 +2,20 @@ import { API_ENDPOINTS, DEFAULT_PAGE_SIZE, ENTITY_STATUS } from '@/constants';
 import { apiRequest } from '@/services/client';
 import type { ApiListResponse } from '@/types/api';
 import type {
-  Store,
-  StoreListParams,
-  StoreListResult,
-  StorePayload,
-} from '@/types/store';
+  Beneficiary,
+  BeneficiaryCreateRequest,
+  BeneficiaryListParams,
+  BeneficiaryListResult,
+  BeneficiaryUpdateRequest,
+} from '@/types/beneficiary';
 import { getApiErrorMessage } from '@/utils/apiError';
 
-/**
- * Store list API response type
- *
- * Supports both legacy array format and standardized ApiListResponse format.
- * New endpoints should use ApiListResponse<Store> directly.
- *
- * @see {@link ApiListResponse} for the standardized format
- */
-type StoreListApiResponse = Store[] | ApiListResponse<Store>; // Standardized format
+type BeneficiaryListApiResponse = Beneficiary[] | ApiListResponse<Beneficiary>;
 
-/**
- * Maps API response to standardized StoreListResult format
- *
- * Handles both legacy array format and standardized ApiListResponse format.
- * Normalizes pagination to 1-based page numbers.
- */
-const mapStoreListResponse = (
-  response: StoreListApiResponse,
-  params: StoreListParams,
-): StoreListResult => {
+const mapListResponse = (
+  response: BeneficiaryListApiResponse,
+  params: BeneficiaryListParams,
+): BeneficiaryListResult => {
   if (Array.isArray(response)) {
     const fallbackSize = (params.size ?? response.length) || DEFAULT_PAGE_SIZE;
     return {
@@ -39,8 +26,6 @@ const mapStoreListResponse = (
       size: fallbackSize,
     };
   }
-
-  // Handle standardized ApiListResponse format
   const list = Array.isArray(response.data) ? response.data : [];
   const inputPageZeroBased =
     params.page !== undefined
@@ -51,7 +36,6 @@ const mapStoreListResponse = (
   const pageZeroBased = response.page ?? inputPageZeroBased;
   const size =
     (response.size ?? params.size ?? list.length) || DEFAULT_PAGE_SIZE;
-
   return {
     data: list,
     total: response.total ?? list.length,
@@ -63,15 +47,13 @@ const mapStoreListResponse = (
 };
 
 const normalizeStatusParam = (status?: ENTITY_STATUS | ENTITY_STATUS[]) => {
-  if (!status) {
-    return undefined;
-  }
+  if (!status) return undefined;
   return Array.isArray(status) ? status.join(',') : status;
 };
 
-export const fetchStores = async (
-  params: StoreListParams = {},
-): Promise<StoreListResult> => {
+export const fetchBeneficiaries = async (
+  params: BeneficiaryListParams = {},
+): Promise<BeneficiaryListResult> => {
   const pageZeroBased =
     params.page !== undefined
       ? Math.max(params.page - 1, 0)
@@ -79,61 +61,56 @@ export const fetchStores = async (
       ? Math.max(params.pageNumber - 1, 0)
       : 0;
 
-  const nameParam = params.name;
-
   const requestParams: Record<string, unknown> = {
     page: pageZeroBased,
     size: params.size,
     status: normalizeStatusParam(params.status),
   };
 
-  if (nameParam && nameParam.trim() !== '') {
-    requestParams.name = nameParam;
+  if (params.text && params.text.trim() !== '') {
+    requestParams.text = params.text;
   }
 
-  const response = await apiRequest<StoreListApiResponse>(
-    API_ENDPOINTS.STORES.LIST,
-    {
-      params: requestParams,
-      retry: { retries: 1 },
-    },
+  const response = await apiRequest<BeneficiaryListApiResponse>(
+    API_ENDPOINTS.BENEFICIARIES.LIST,
+    { params: requestParams, retry: { retries: 1 } },
   );
-
-  return mapStoreListResponse(response, params);
+  return mapListResponse(response, params);
 };
 
-export const createStore = async (payload: StorePayload): Promise<Store> => {
-  return apiRequest<Store>(API_ENDPOINTS.STORES.CREATE, {
+export const createBeneficiary = async (
+  payload: BeneficiaryCreateRequest,
+): Promise<Beneficiary> => {
+  return apiRequest<Beneficiary>(API_ENDPOINTS.BENEFICIARIES.CREATE, {
     method: 'POST',
     data: payload,
     retry: { retries: 0 },
   });
 };
 
-export const updateStore = async (
-  id: number,
-  payload: StorePayload,
-): Promise<Store> => {
-  return apiRequest<Store>(API_ENDPOINTS.STORES.UPDATE, {
+export const updateBeneficiary = async (
+  payload: BeneficiaryUpdateRequest,
+): Promise<Beneficiary> => {
+  return apiRequest<Beneficiary>(API_ENDPOINTS.BENEFICIARIES.UPDATE, {
     method: 'PUT',
-    data: { id, ...payload },
+    data: payload,
     retry: { retries: 0 },
   });
 };
 
-export const deleteStore = async (id: number): Promise<void> => {
-  return apiRequest<void>(API_ENDPOINTS.STORES.DELETE(id), {
+export const deleteBeneficiary = async (id: number): Promise<void> => {
+  return apiRequest<void>(API_ENDPOINTS.BENEFICIARIES.DELETE(id), {
     method: 'DELETE',
     retry: { retries: 0 },
   });
 };
 
-export const downloadStores = async (): Promise<{
+export const downloadBeneficiaries = async (): Promise<{
   blob: Blob;
   filename: string;
 }> => {
   try {
-    const response = await apiRequest<any>(API_ENDPOINTS.STORES.EXPORT, {
+    const response = await apiRequest<any>(API_ENDPOINTS.BENEFICIARIES.EXPORT, {
       method: 'GET',
       responseType: 'blob',
       getResponse: true,
@@ -146,45 +123,34 @@ export const downloadStores = async (): Promise<{
       (response.headers as Record<string, string> | undefined)?.[
         'Content-Disposition'
       ];
-
     const filenameMatch = disposition?.match(
       /filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i,
     );
     const rawFilename =
-      (filenameMatch?.[1] || filenameMatch?.[2]) ?? 'stores.xlsx';
+      (filenameMatch?.[1] || filenameMatch?.[2]) ?? 'beneficiary.xlsx';
     let filename = rawFilename;
     try {
       filename = decodeURIComponent(rawFilename);
-    } catch (_) {
-      // keep raw filename if decode fails
-    }
-
+    } catch (_) {}
     const blob: Blob = response.data;
     return { blob, filename };
   } catch (error) {
-    // Use global api error message normalization
     throw new Error(getApiErrorMessage(error));
   }
 };
 
-// Upload an XLSX file to create stores in bulk.
-// Backend expects: multipart/form-data with a single part named "file" (xlsx only).
-// It will process asynchronously and send a report via email to the current user.
-export const uploadStoresFile = async (
+export const uploadBeneficiariesFile = async (
   file: File,
 ): Promise<{ jobId?: string; message?: string }> => {
   const formData = new FormData();
   formData.append('file', file);
-
-  // Do not set the Content-Type header manually; the browser will add boundary.
-  const response = await apiRequest<any>(API_ENDPOINTS.STORES.UPLOAD, {
+  const response = await apiRequest<any>(API_ENDPOINTS.BENEFICIARIES.UPLOAD, {
     method: 'POST',
     data: formData,
     requestType: undefined,
     retry: { retries: 0 },
     useGlobalErrorHandler: true,
   });
-
   if (response && typeof response === 'object') {
     const { jobId, message } = response as { jobId?: string; message?: string };
     return { jobId, message };

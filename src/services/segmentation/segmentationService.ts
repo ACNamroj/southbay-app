@@ -78,7 +78,7 @@ export const fetchSegmentations = async (
       ? Math.max(params.pageNumber - 1, 0)
       : 0;
 
-  const nameParam = params.name ?? params.search;
+  const nameParam = params.name ?? (params as any).search;
 
   const requestParams: Record<string, unknown> = {
     page: pageZeroBased,
@@ -111,8 +111,7 @@ export const updateSegmentation = async (
   id: number,
   payload: SegmentationPayload,
 ): Promise<Segmentation> => {
-  const discountPercentage =
-    payload.discount_percentage ?? payload.discount_percentage_cap ?? 0;
+  const discountPercentage = payload.discount_percentage_cap ?? 0;
 
   return apiRequest<Segmentation>(API_ENDPOINTS.SEGMENTATIONS.UPDATE, {
     method: 'PUT',

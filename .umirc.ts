@@ -61,10 +61,10 @@ export default defineConfig({
       icon: 'stores',
     },
     {
-      path: '/people',
+      path: '/beneficiaries',
       name: 'Personas',
       title: 'Gestión de Personas',
-      component: './People',
+      component: './Beneficiaries',
       wrappers: ['@/wrappers/auth'],
       icon: 'people',
     },

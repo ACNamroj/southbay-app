@@ -6,7 +6,7 @@ import {
   fetchStores,
   updateStore,
   uploadStoresFile,
-} from '@/services/stores/storeService';
+} from '@/services/store/storeService';
 import type {
   Store,
   StoreListParams,
@@ -37,11 +37,9 @@ const useStoresModel = () => {
             params.pageSize ??
             pagination.pageSize,
           name: params.name ?? lastQueryRef.current.name,
-          search: params.search ?? lastQueryRef.current.search,
           status: params.status ?? lastQueryRef.current.status,
         };
         const result = await fetchStores(query);
-
         setStores(result.data);
         setPagination({
           current: result.page,

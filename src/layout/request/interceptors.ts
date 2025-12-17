@@ -30,6 +30,7 @@ const AUTH_EXCLUDED_PATHS = [
 
 type AuthAxiosRequestConfig = AxiosRequestConfig & {
   skipAuthRefresh?: boolean;
+  skipErrorHandler?: boolean;
   _retry?: boolean;
 };
 
@@ -153,13 +154,13 @@ export const createRequestConfig = (): RequestConfig => ({
   requestInterceptors: [authRequestInterceptor],
   responseInterceptors: [
     [
-      (response) => response,
+      (response: any) => response,
       (error: AxiosError) => authResponseErrorInterceptor(error),
     ] as any,
   ],
   errorConfig: {
-    errorHandler: (error: AxiosError) => {
-      const config = error.config as AuthAxiosRequestConfig | undefined;
+    errorHandler: (error: any): void => {
+      const config = error?.config as AuthAxiosRequestConfig | undefined;
       if (config?.skipErrorHandler) {
         throw error;
       }

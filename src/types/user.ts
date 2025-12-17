@@ -1,3 +1,5 @@
+import { ENTITY_STATUS } from '@/constants';
+
 export type UserProfile = {
   first_name: string;
   last_name: string;
@@ -16,9 +18,10 @@ export type UserRole =
   | string;
 
 export type User = {
-  id?: number;
+  id: number;
   email: string;
   uuid: string;
+  status: ENTITY_STATUS;
   segmentation?: string | null;
   roles?: UserRole[];
   profile?: UserProfile | null;
@@ -50,6 +53,7 @@ export type UserListResult = {
 export type UserPayload = {
   email: string;
   roles: UserRole[];
+  status: ENTITY_STATUS;
   segmentation?: string | null;
   profile: UserProfile;
 };

@@ -25,6 +25,7 @@ import {
 } from 'antd';
 import React, { useMemo, useRef, useState } from 'react';
 
+import { type ENTITY_STATUS, ENTITY_STATUS_COLORS, STATUS } from '@/constants';
 import type { User, UserPayload, UserRole } from '@/types/user';
 import { compareDates, compareStrings, formatDateTime } from '@/utils/format';
 
@@ -56,8 +57,18 @@ const getRoleColor = (role?: string) => {
 
 const getPrimaryRole = (roles?: UserRole[]) => roles?.[0];
 
+type UserFormValues = {
+  email: string;
+  roles: UserRole[];
+  status: ENTITY_STATUS;
+  first_name?: string;
+  last_name?: string;
+  document_number?: string;
+  phone_number?: string;
+};
+
 const UsersPage: React.FC = () => {
-  const [form] = Form.useForm<UserPayload>();
+  const [form] = Form.useForm<UserFormValues>();
   const [modalOpen, setModalOpen] = useState(false);
   const [modalSubmitting, setModalSubmitting] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -66,6 +77,13 @@ const UsersPage: React.FC = () => {
 
   const { loadUsers, create, update, remove, loading, pagination } =
     useModel('users');
+
+  // Masculine labels for user status context only
+  const USER_STATUS_LABELS: Record<ENTITY_STATUS, string> = {
+    ACTIVE: 'Activo',
+    INACTIVE: 'Inactivo',
+    DELETED: 'Eliminado',
+  };
 
   const roleOptions: UserRole[] = useMemo(() => {
     const baseRoles: UserRole[] = [
@@ -85,6 +103,7 @@ const UsersPage: React.FC = () => {
     form.resetFields();
     form.setFieldsValue({
       roles: ['USER'],
+      status: STATUS.ACTIVE,
       first_name: '',
       last_name: '',
       document_number: '',
@@ -98,6 +117,7 @@ const UsersPage: React.FC = () => {
     form.setFieldsValue({
       email: user.email,
       roles: user.roles ?? [],
+      status: user.status,
       first_name: user.profile?.first_name ?? '',
       last_name: user.profile?.last_name ?? '',
       document_number: user.profile?.document_number ?? '',
@@ -114,10 +134,11 @@ const UsersPage: React.FC = () => {
 
   const handleSubmit = async () => {
     try {
-      const values = await form.validateFields();
+      const values: UserFormValues = await form.validateFields();
       const payload: UserPayload = {
         email: values.email.trim(),
         roles: values.roles,
+        status: values.status,
         segmentation: editingUser?.segmentation ?? null,
         profile: {
           first_name: values.first_name?.trim() ?? '',
@@ -216,7 +237,24 @@ const UsersPage: React.FC = () => {
       ),
     },
     {
-      title: 'Fecha de creación',
+      title: 'Estado',
+      dataIndex: 'status',
+      width: 120,
+      sorter: (a, b) =>
+        compareStrings(
+          USER_STATUS_LABELS[a.status],
+          USER_STATUS_LABELS[b.status],
+        ),
+      responsive: ['sm', 'md', 'lg', 'xl'],
+      render: (_, record) => {
+        const s = record.status as ENTITY_STATUS | undefined;
+        const color = s ? ENTITY_STATUS_COLORS[s] : 'default';
+        const label = s ? USER_STATUS_LABELS[s] : '—';
+        return <Tag color={color}>{label}</Tag>;
+      },
+    },
+    {
+      title: 'Fecha de Creación',
       dataIndex: 'created_at',
       sorter: (a, b) => compareDates(a.created_at, b.created_at),
       responsive: ['lg', 'xl'],
@@ -228,7 +266,7 @@ const UsersPage: React.FC = () => {
         ),
     },
     {
-      title: 'Fecha de actualización',
+      title: 'Fecha de Actualización',
       dataIndex: 'updated_at',
       sorter: (a, b) => compareDates(a.updated_at, b.updated_at),
       responsive: ['lg', 'xl'],
@@ -274,7 +312,7 @@ const UsersPage: React.FC = () => {
             icon={<PlusOutlined />}
             onClick={openCreateModal}
           >
-            Agregar usuario
+            Agregar Usuario
           </Button>,
         ],
       }}
@@ -332,6 +370,16 @@ const UsersPage: React.FC = () => {
                         : compareStrings(
                             getRoleLabel(getPrimaryRole(b.roles)),
                             getRoleLabel(getPrimaryRole(a.roles)),
+                          );
+                    case 'status':
+                      return order === 'ascend'
+                        ? compareStrings(
+                            USER_STATUS_LABELS[a.status],
+                            USER_STATUS_LABELS[b.status],
+                          )
+                        : compareStrings(
+                            USER_STATUS_LABELS[b.status],
+                            USER_STATUS_LABELS[a.status],
                           );
                     case 'created_at':
                       return order === 'ascend'
@@ -396,6 +444,13 @@ const UsersPage: React.FC = () => {
             ]}
           >
             <Input placeholder="usuario@southbay.com" maxLength={255} />
+          </Form.Item>
+          <Form.Item name="status" label="Estado" rules={[{ required: true }]}>
+            <Select
+              options={Object.values(STATUS)
+                .filter((s) => s !== STATUS.DELETED)
+                .map((s) => ({ value: s, label: USER_STATUS_LABELS[s] }))}
+            />
           </Form.Item>
           <Form.Item
             name="roles"

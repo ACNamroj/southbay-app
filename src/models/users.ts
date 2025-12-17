@@ -35,7 +35,6 @@ const useUsersModel = () => {
             params.pageSize ??
             pagination.pageSize,
           email: params.email ?? lastQueryRef.current.email,
-          search: params.search ?? lastQueryRef.current.search,
           roles: params.roles ?? lastQueryRef.current.roles,
         };
 

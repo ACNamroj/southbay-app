@@ -4,10 +4,9 @@ import {
   DEFAULT_RETRY_DELAY_MS,
 } from '@/constants';
 import { getApiErrorMessage, normalizeApiError } from '@/utils/apiError';
-import type { RequestOptionsInit } from '@umijs/max';
+import type { RequestOptions } from '@umijs/max';
 import { request } from '@umijs/max';
 import { message } from 'antd';
-import type { AxiosError } from 'axios';
 
 const API_BASE_URL = process.env.BASE_URL ?? '';
 
@@ -25,7 +24,7 @@ type RetryOptions = {
   retryOnNetworkError?: boolean;
 };
 
-type ApiRequestOptions = RequestOptionsInit & {
+type ApiRequestOptions = RequestOptions & {
   retry?: RetryOptions;
   useGlobalErrorHandler?: boolean;
 };
@@ -35,7 +34,7 @@ const sleep = (ms: number) =>
     setTimeout(resolve, ms);
   });
 
-const shouldRetry = (error: AxiosError, retry?: RetryOptions) => {
+const shouldRetry = (error: any, retry?: RetryOptions) => {
   if (!retry) {
     return false;
   }
@@ -43,8 +42,8 @@ const shouldRetry = (error: AxiosError, retry?: RetryOptions) => {
     retryStatusCodes = [429, 502, 503, 504],
     retryOnNetworkError = true,
   } = retry;
-  const status = error.response?.status;
-  const isNetworkError = !error.response;
+  const status = error?.response?.status as number | undefined;
+  const isNetworkError = !error?.response;
   if (isNetworkError) {
     return retryOnNetworkError;
   }
@@ -73,8 +72,7 @@ export const apiRequest = async <T>(
     } catch (error) {
       lastError = normalizeApiError(error);
       attempt += 1;
-      const axiosError = error as AxiosError;
-      if (attempt > retryAttempts || !shouldRetry(axiosError, retry)) {
+      if (attempt > retryAttempts || !shouldRetry(error, retry)) {
         if (useGlobalErrorHandler && typeof window !== 'undefined') {
           message.error(getApiErrorMessage(lastError));
         }

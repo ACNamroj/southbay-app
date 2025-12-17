@@ -4,7 +4,6 @@
  * This file contains all API endpoints used throughout the application.
  * Using constants prevents typos and makes refactoring easier.
  */
-
 export const API_ENDPOINTS = {
   // Authentication endpoints
   AUTH: {
@@ -21,7 +20,6 @@ export const API_ENDPOINTS = {
     ME: '/v1/users/me',
     LIST: '/v1/users',
     CREATE: '/v1/users',
-    // Update is a body-based PUT; backend expects the ID inside the request body.
     UPDATE: '/v1/users',
     DELETE: (id: number) => `/v1/users/${id}`,
     PASSWORD: {
@@ -40,19 +38,20 @@ export const API_ENDPOINTS = {
     UPLOAD: '/v1/stores/upload',
   },
 
-  // People endpoints
-  PEOPLE: {
-    LIST: '/v1/people',
-    CREATE: '/v1/people',
-    UPDATE: (id: number) => `/v1/people/${id}`,
-    DELETE: (id: number) => `/v1/people/${id}`,
+  // Beneficiaries endpoints
+  BENEFICIARIES: {
+    LIST: '/v1/beneficiaries',
+    CREATE: '/v1/beneficiaries',
+    UPDATE: '/v1/beneficiaries',
+    DELETE: (id: number) => `/v1/beneficiaries/${id}`,
+    EXPORT: '/v1/beneficiaries/export',
+    UPLOAD: '/v1/beneficiaries/upload',
   },
 
   // Segmentation endpoints
   SEGMENTATIONS: {
     LIST: '/v1/segmentations',
     CREATE: '/v1/segmentations',
-    // Backend expects the ID inside the body, not in the URL.
     UPDATE: '/v1/segmentations',
     DELETE: (id: number) => `/v1/segmentations/${id}`,
   },

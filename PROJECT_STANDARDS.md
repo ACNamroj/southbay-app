@@ -84,7 +84,7 @@ Services are organized by domain:
 
 ```typescript
 // Current: Hardcoded in storeService.ts
-apiRequest<Store>('/v1/stores', { ... })
+apiRequest<Store>('/v1/store', { ... })
 ```
 
 **Recommendation:** Centralize all API endpoints in constants
@@ -93,12 +93,12 @@ apiRequest<Store>('/v1/stores', { ... })
 // Proposed: src/constants/apiEndpoints.ts
 export const API_ENDPOINTS = {
   STORES: {
-    LIST: '/v1/stores',
-    CREATE: '/v1/stores',
-    UPDATE: '/v1/stores',
+    LIST: '/v1/store',
+    CREATE: '/v1/store',
+    UPDATE: '/v1/store',
     DELETE: (id: number) => `/v1/stores/${id}`,
-    EXPORT: '/v1/stores/export',
-    UPLOAD: '/v1/stores/upload',
+    EXPORT: '/v1/store/export',
+    UPLOAD: '/v1/store/upload',
   },
   // ...
 } as const;
@@ -195,7 +195,7 @@ export const STORE_STATUS = {
 **Example:**
 
 ```typescript
-// src/services/stores/index.ts
+// src/services/store/index.ts
 export * from './storeService';
 export type { StoreService } from './storeService';
 ```
