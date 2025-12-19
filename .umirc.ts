@@ -86,7 +86,7 @@ export default defineConfig({
     },
   ],
   define: {
-    'process.env.BASE_URL': 'http://localhost:8080',
+    'process.env.BASE_URL': process.env.BASE_URL,
   },
   npmClient: 'pnpm',
 });
